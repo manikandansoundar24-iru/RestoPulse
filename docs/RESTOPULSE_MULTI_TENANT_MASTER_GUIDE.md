@@ -133,3 +133,4 @@ RestoPulse is positioned to directly challenge legacy on-premise systems (Petpoo
 | **Single Outlet Starter** | ₹7,999 / year | Biriyani Kiosks & Small Takeaways | Counter billing, 80mm ESC/POS thermal printing, daily token generation, WhatsApp receipts, offline caching. |
 | **Pro Kitchen Edition** | ₹14,999 / year | High-Volume Outlets (100–500 plates/day) | Everything in Starter + Live Deg portion tracking, raw material ledger, COGS margin engine, 4-week prep forecasting. |
 | **Multi-Branch Franchise Cloud** | ₹24,999 / year | Restaurant Chains (3–10 Locations) | Everything in Pro + Multi-tenant isolation, cross-outlet consolidated reporting, centralized menu management, developer backup console. |
+

@@ -1,36 +1,37 @@
-# Setup & Deployment Guide — A to Z
+# RestoPulse — Setup & Cloudflare Workers Deployment Guide
 
 ## 1. What You Need
 
 - Node.js 20+ (or Bun 1.1+)
 - Any modern web browser (Chrome, Edge, Safari, Firefox)
-- Nothing else: Zero external databases required, zero API keys required. IndexedDB offline storage handles local caching.
+- Neon Cloud Serverless PostgreSQL for centralized cloud sync.
+- Cloudflare Workers account for zero-cost edge hosting.
 
 ---
 
 ## 2. Run It Locally on Your Laptop
 
 ```bash
-cd spotlight-biriyani
+git clone https://github.com/manikandansoundar24-iru/RestoPulse.git
+cd RestoPulse
 npm install          # or: bun install
 npm run dev          # or: bun run dev
 ```
 
 Open `http://localhost:8080` in your browser:
-- Public Website & Customer Menu: `http://localhost:8080/`
-- POS Billing Terminal: `http://localhost:8080/app/billing`
+- Multi-Tenant Terminal Gateway: `http://localhost:8080/login`
+- Spot Light Biriyani POS: `http://localhost:8080/app/billing`
+- Manam Restaurant QR Menu: `http://localhost:8080/manam`
+- Executive Operating Profit Dashboard: `http://localhost:8080/app`
 - Raw Material & Dum Stock Ledger: `http://localhost:8080/app/stock`
-- Chennai Metro GPS Radar: `http://localhost:8080/branches`
-- Multi-Industry Platform Hub: `http://localhost:8080/platform`
 - Thermal Printer & Hardware Engine: `http://localhost:8080/app/settings`
-
-The app boots pre-populated with **21 days of demo sales data** so every chart, profit margin, and stock ledger is active. You can reset to zero anytime in `/app/settings` -> *Reset to demo data*.
 
 ---
 
-## 3. GitHub & Vercel Step-by-Step Deployment (100% Free, Zero Cost)
+## 3. GitHub & Cloudflare Workers Deployment (100% Free, Unlimited Bandwidth)
 
-You do **NOT** need to pay for a domain name or expensive servers. Vercel provides a free, lightning-fast SSL HTTPS domain (e.g. `https://spotlight-biriyani.vercel.app`) that runs 24/7 across the globe.
+You do **NOT** need to pay for a domain name or expensive servers. Cloudflare Workers provides a lightning-fast SSL HTTPS edge deployment with unlimited bandwidth:
+👉 **Production Gateway:** `https://restopulse.restopulse-cloud.workers.dev`
 
 ### Step 3.1: Push Your Code to a Private GitHub Repository
 1. Open PowerShell or Terminal in your project folder:
@@ -41,40 +42,35 @@ You do **NOT** need to pay for a domain name or expensive servers. Vercel provid
    ```bash
    git init
    git add .
-   git commit -m "Spotlight Biriyani POS v1.0 Production Release"
+   git commit -m "RestoPulse Multi-Tenant POS Production Release"
    ```
 3. Open your browser, go to **https://github.com** and log in.
-4. Click **New Repository** (+ icon at top right):
-   - Repository Name: `spotlight-biriyani`
-   - Privacy: **Select Private** (⚠️ This ensures your source code is 100% private and protected).
-   - Do NOT initialize with README or license. Click **Create repository**.
-5. Copy the remote commands from GitHub and run them in your terminal:
+4. Your repository is: `https://github.com/manikandansoundar24-iru/RestoPulse.git`
+5. Connect your remote and push code:
    ```bash
    git branch -M main
-   git remote add origin https://github.com/YOUR_GITHUB_USERNAME/spotlight-biriyani.git
-   git push -u origin main
+   git remote set-url origin https://github.com/manikandansoundar24-iru/RestoPulse.git
+   git push origin main
    ```
 
-### Step 3.2: Connect and Deploy on Vercel
-1. Go to **https://vercel.com** and log in (or click "Sign Up with GitHub").
-2. On your Vercel Dashboard, click **Add New Project**.
-3. Under "Import Git Repository", find your private repository: `spotlight-biriyani` and click **Import**.
-4. Vercel automatically detects Vite and reads `vercel.json` from your root folder:
-   - Framework Preset: `Vite`
+### Step 3.2: Connect and Deploy on Cloudflare Workers
+1. Go to **https://dash.cloudflare.com** and log in.
+2. Navigate to **Workers & Pages** -> **Create application** -> **Connect to Git**.
+3. Select your repository: `RestoPulse`.
+4. Configure Build Settings:
    - Build Command: `npm run build`
-   - Output Directory: `dist`
+   - Deploy Command: `npx wrangler deploy`
 5. Click **Deploy**.
-6. Within **45 seconds**, your app is live! You will receive a production URL such as:
-   `https://spotlight-biriyani.vercel.app`
-7. This URL works on any phone, counter tablet, iPhone, Android, or billing PC worldwide with zero downtime!
+6. Within **60 seconds**, your app is live across Cloudflare's global Anycast edge network with unlimited bandwidth:
+   `https://restopulse.restopulse-cloud.workers.dev`
 
 ---
 
 ## 4. SaaS Business Model: Retaining 100% Product Ownership & Security
 
 ### Why You Never Give Raw Source Code to the Restaurant
-- If you copy the source code to the restaurant owner's laptop, they can share it with competitors, hire a cheap freelancer to modify it, or stop paying you subscription fees.
-- **The SaaS Solution:** You host the code on your private GitHub and Vercel cloud. The restaurant owner and cashier only get a login link (`https://spotlight-biriyani.vercel.app/app/billing`) and their 4-digit staff PIN.
+- If you copy the source code to the restaurant owner's laptop, they can share it with competitors or stop paying you subscription fees.
+- **The SaaS Solution:** You host the code on your private GitHub and Cloudflare cloud. The restaurant owner and cashier only get a login link (`https://restopulse.restopulse-cloud.workers.dev/login`) and their 4-digit staff PIN.
 - They **never touch the source code**. You retain 100% ownership, intellectual property rights, database control, and recurring monthly software licensing authority.
 
 ### Solving the "Laptop Must Always Run" Problem

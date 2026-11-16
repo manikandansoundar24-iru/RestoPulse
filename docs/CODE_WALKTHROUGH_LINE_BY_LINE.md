@@ -1,4 +1,4 @@
-# SPOT LIGHT BIRIYANI — LINE-BY-LINE & METHOD-BY-METHOD CODE WALKTHROUGH
+# RESTOPULSE — LINE-BY-LINE & METHOD-BY-METHOD CODE WALKTHROUGH
 **A Complete Architectural & Implementation Manual for Engineers, Architects & Operators**
 
 ---

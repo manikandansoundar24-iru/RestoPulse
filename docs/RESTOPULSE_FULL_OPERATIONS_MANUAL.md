@@ -235,3 +235,4 @@ The platform architect holds the **Master Developer Key** (`dev@spotlight2026`).
 ### Q3: How do we add a new client restaurant tenant?
 1. Open `src/routes/login.tsx` and add the restaurant name and identifier to the `TENANTS` array.
 2. The new restaurant immediately appears in the login gateway dropdown, ready for independent billing and menu configuration.
+

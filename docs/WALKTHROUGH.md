@@ -1,44 +1,43 @@
-# Spotlight Biriyani & Commerce Cloud — Screen-by-Screen Walkthrough
+# 🚀 RestoPulse Multi-Tenant Platform — Screen-by-Screen Walkthrough
+
+**Platform:** RestoPulse Enterprise Cloud ERP & POS  
+**Live Production Gateway:** `https://restopulse.restopulse-cloud.workers.dev`  
+**Tenant Case Studies:** Spot Light Biriyani (Flagship) & Manam Restaurant (South Indian Dining)  
+
+---
 
 ## 1. Public Experience & Customer Touchpoints
 
 | Route | Feature & Purpose |
 | --- | --- |
-| `/` **Home** | Royal White flagship storefront featuring slow-dum brass handi countdown, 4.9★ reviews, signature biriyanis, party buckets, Chennai sides, and 1-tap WhatsApp quick order. |
+| `/` **Platform Home** | RestoPulse flagship storefront featuring live kitchen batch countdown, authentic dishes, party buckets, and 1-tap WhatsApp quick order. |
+| `/login` **Terminal Gateway** | Role-based gatekeeper with dynamic active client restaurant selector (Spot Light Biriyani, Manam Restaurant). |
 | `/menu` **Live Menu** | Real-time synchronized menu grouped by category (Dum Biriyanis, Starters, Breads, Halwa). Automatically updates whenever prices or dish availability are edited in the management app. |
 | `/branches` **Chennai Radar** | Authentic South Chennai radar map with coastline and live GPS hub pins (Tharamani OMR Flagship, Adyar Beach Kitchen, Velachery Hub) showing batch stock levels and 1-tap Google Maps directions. |
-| `/platform` **Commerce Cloud** | Square-inspired multi-vertical platform hub showcasing four specialized industry engines: Spotlight Biriyani & QSR, StyleStudio (Salon & Spa), FreshCut (Meat & Seafood), and TradePulse (Wholesale FMCG). |
-| Header **Scan QR** | Interactive SVG QR Code modal allowing any mobile phone camera to instantly scan and launch the app or customer menu on any mobile device worldwide. |
-| Floating **Spotlight Assistant** | AI-driven floating sales assistant (inspired by Square Assistant) guiding prospective clients through service models, business types, and instant WhatsApp demo scheduling. |
+| `/manam` **Diner Table QR Menu** | Dynamic mobile menu and ordering portal targeted by QR codes on dining tables. |
+| Header **Staff Login** | Secure gateway for restaurant owners, billing counter cashiers, and kitchen head chefs. |
 
 ---
 
 ## 2. Management & POS Application (`/app`)
 
 ### 2.1 Billing Terminal (`/app/billing`)
-1. **Dynamic Sales Channels:** Switch between Counter, Swiggy, and Zomato. Menu prices automatically adjust to compensate for 28% delivery commissions.
-2. **Instant Bill Calculation:** Subtotal, customized discounts, SGST/CGST tax calculations, and net payable amount.
-3. **Multi-Payment Modes:** Cash, UPI Dynamic QR, and Card.
-4. **Thermal Printer Integration:** 1-tap instant print tailored for 80mm desktop and 58mm portable thermal receipt engines.
-5. **WhatsApp Digital Invoice Dispatcher:** Send formatted digital receipt cards directly to the customer's WhatsApp phone number.
+1. **Top Navigation Ribbon:** 1-tap tabs for `Dashboard`, `Billing & Floor POS`, `Captain POS`, `Reports & Forecast`, `Stock & Deg`, `Menu & Costs`, and `Settings`.
+2. **Kitchen Deg Batch Tracker:** Real-time visibility into cooked capacity (160 plates), sold today counter, and live depletion gauge.
+3. **Dynamic Sales Channels:** Switch between Dine-in Counter, Swiggy, and Zomato. Menu prices automatically adjust to compensate for delivery commissions.
+4. **1-Tap Unified Payments:** Settle bills instantly with dedicated tabs for `UPI`, `Cash`, and `Card`.
+5. **Thermal Printer Integration:** 1-tap instant print tailored for 80mm desktop and 58mm portable thermal receipt engines with ESC/POS commands.
+6. **Past Bills & Audit Trail:** Search historical bills and perform cryptographic corrections with audit badges to prevent cashier fraud.
+7. **KDS & Z-Report:** Kitchen display screens and end-of-day cash drawer reconciliation.
 
-### 2.2 Raw Material & Dum Stock Ledger (`/app/stock`)
-1. **On-Hand Raw Material Inventory:** Real-time tracking of Basmati rice, chicken, mutton, spices, oil, curd, and packaging materials.
-2. **Edit Material Details:** Modify raw material names, units, stock quantities, reorder thresholds, and unit costs anytime.
-3. **Remove / Delete Material:** One-click removal of mistakes or obsolete inventory items (e.g. curd, carry bags, garam masala).
-4. **Reorder Alert System:** Badges automatically turn **RED ("⚠️ Reorder")** when `Current Qty <= Reorder Level` to warn kitchen staff before ingredients run out. Plentiful stock displays **GREEN ("✓ OK")**.
-5. **Movement Logger:** Record daily raw material purchases, kitchen cooking usage, and kitchen wastage.
+### 2.2 Executive Dashboard (`/app`)
+- **True Operating Profit:** The exact cash left in the business after subtracting Food Cost (meat, rice, ghee), Aggregator Commissions, and Packaging fees.
+- **Platform Commission Bleed:** Real-time visibility into the exact rupee amount lost to Swiggy and Zomato.
+- **Multi-Tenant Filter:** Switch between active branches and tenants without data crossover.
 
-### 2.3 Menu & Plate Cost Engineering (`/app/items`)
-- Manage counter prices, delivery platform prices, and True Food Cost (COGS) per dish.
-- Live margin and gross profit percentage recalculation per dish.
+### 2.3 Raw Material & Kitchen Inventory Ledger (`/app/stock`)
+- Live tracking of chicken, mutton, seeraga samba rice, ghee, and cooking oil.
+- Low-stock red pulse warning alerts.
 
-### 2.4 Reports, Analytics & Daily Forecast (`/app/reports`)
-- Comprehensive breakdown of gross sales, customer discounts, raw material food costs, delivery aggregator commissions, and net retained profit.
-- Tomorrow's kitchen prep forecasting based on weighted moving averages.
-- Accountant-ready CSV data export.
-
-### 2.5 Hardware & System Settings (`/app/settings`)
-- Brand details, FSSAI license headers, and tax registration numbers.
-- **Thermal Printer Engine:** Configure 80mm vs 58mm/56mm paper widths, auto-guillotine paper cutting, and solenoid cash drawer kick pulses.
-- System backups: 1-click JSON backup download and database restoration.
+### 2.4 Intelligent Prep Forecasting (`/app/reports`)
+- 4-week weighted moving average algorithm predicting tomorrow morning's plate count during 10:00 PM night day-close.

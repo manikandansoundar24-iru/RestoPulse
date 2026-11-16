@@ -1,7 +1,7 @@
-# SPOT LIGHT BIRIYANI & POS MANAGER
+# RESTOPULSE MULTI-TENANT CLOUD ERP & POS
 # THE DEFINITIVE MASTER ENGINEERING & BUSINESS BIBLE
 **A Complete Architectural, Code-Level, Financial & Operational Encyclopedia**
-*Author: Engineering & System Architecture Team | Version: 2.4.0 (Production Core)*
+*Author: Manikandan Soundar (Platform Architect) | Version: 4.0.0 (Enterprise Multi-Tenant Release)*
 
 ---
 
