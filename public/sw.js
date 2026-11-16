@@ -6,6 +6,8 @@ const STATIC_ASSETS = [
   "/app/billing",
   "/login",
   "/manifest.json",
+  "/icon-192.png",
+  "/icon-512.png",
   "/favicon.ico"
 ];
 

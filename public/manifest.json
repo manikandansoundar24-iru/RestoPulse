@@ -1,12 +1,24 @@
 {
-  "name": "RestoPulse — Cloud POS & Kitchen ERP",
+  "name": "RestoPulse — Multi-Tenant Cloud ERP & POS",
   "short_name": "RestoPulse",
-  "start_url": "/app/billing",
+  "start_url": "/login",
   "display": "standalone",
   "background_color": "#09090b",
   "theme_color": "#ea580c",
   "description": "Fast Cloud POS Terminal and Multi-Branch Kitchen Operating System",
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "/favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
@@ -14,4 +26,3 @@
     }
   ]
 }
-

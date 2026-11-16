@@ -1,66 +1,80 @@
-# Architecture
+# 🏛️ RestoPulse — Enterprise System Architecture
+
+**Platform:** RestoPulse Multi-Tenant Cloud ERP & POS  
+**Live Production URL:** `https://restopulse.restopulse-cloud.workers.dev`  
+**Deployment Infrastructure:** Cloudflare Workers Edge (Global Anycast) + Neon PostgreSQL (AWS Singapore)  
+**Last Updated:** November 2026 | Version 4.0.0 Multi-Tenant Production  
+
+---
+
+## 1. Directory Structure
 
 ```
 src/
   routes/
-    __root.tsx          root layout, fonts, global meta, toaster
-    index.tsx           website home
-    menu.tsx            public menu (reads the same item data as billing)
-    branches.tsx        3 branches
-    contact.tsx         contact / bulk orders
-    app.tsx             owner-app layout: header, branch selector, tab nav, <Outlet/>
-    app.index.tsx       dashboard (KPIs, charts, channel P&L)
-    app.billing.tsx     POS billing + thermal receipt printing
-    app.reports.tsx     item-wise report, prep forecast, CSV export
-    app.stock.tsx       stock on hand, movements, add material
-    app.items.tsx       menu & cost editor
-    app.settings.tsx    business, channels, branches, backup/restore
-  components/site/SiteShell.tsx   public header + footer
-  lib/pos-store.ts      types, seed data, storage, profit maths, forecast
-  styles.css            design tokens (colours, fonts, shadows)
-  assets/               food photography
+    __root.tsx                  Root layout, fonts, global meta, PWA service worker updater
+    index.tsx                   Platform homepage & live flagship showcase
+    login.tsx                   Enterprise Multi-Tenant Gateway & Staff Gatekeeper (/login)
+    manam.tsx                   Manam Restaurant Diner Table QR Menu & Ordering (/manam)
+    menu.tsx                    Public menu & authentic dish catalog
+    branches.tsx                Multi-branch radar map & kitchen hubs
+    contact.tsx                 B2B software sales & bulk order booking
+    app.tsx                     Authenticated layout: tenant badge, top tab navigation ribbon, <Outlet/>
+    app.index.tsx               Executive dashboard (KPIs, net cash margin, COGS, platform commission)
+    app.billing.tsx             High-speed counter POS, deg stock tracker, 1-tap checkout, thermal print
+    app.reports.tsx             Itemized P&L, night Z-report close, 4-week moving average prep forecast
+    app.stock.tsx               Raw material inventory ledger, low-stock pulse alerts, inward moves
+    app.items.tsx               Menu item master, custom categories, recipe cost engine
+    app.settings.tsx            Branch configs, ESC/POS thermal printer setup, JSON backup/restore
+  components/
+    site/SiteShell.tsx          Public navigation header, staff login link, footer
+    ui/                         Radix UI primitives (dialogs, tabs, dropdowns, buttons)
+  lib/
+    pos-store.ts                Core state engine, billing calculations, seed data, offline sync
+    neon-sync.ts                Server functions connecting to Neon Cloud PostgreSQL
+  styles.css                    Tailwind CSS tokens, responsive typography, POS print media queries
+  public/
+    manifest.json               PWA manifest (standalone display, icons, start_url)
+    sw.js                       Service Worker Cache v2 (Network-first with offline fallback)
+    icon-192.png                High-res 192x192 PWA application icon
+    icon-512.png                High-res 512x512 PWA splash application icon
+    favicon.svg                 Vector flame emblem
 ```
 
-Routing is file-based (TanStack Router). A file named `app.billing.tsx` serves `/app/billing`.
-`src/routeTree.gen.ts` is generated — never edit it.
+Routing is fully file-based using TanStack Router. All routes are strictly typed in `src/routeTree.gen.ts`.
 
-## Data layer (`src/lib/pos-store.ts`)
+---
 
-One JSON document in `localStorage` under `slb.pos.v1`:
+## 2. Multi-Tenant Architecture & Session Isolation
 
-```ts
-DB = { branches, channels, items, sales, stock, moves, settings }
-```
+RestoPulse powers multiple independent restaurant client tenants from a single edge codebase:
+- **Tenant 1: Spot Light Biriyani (`spotlight-biriyani`)** — Chennai dum biriyani chain with Taramani, Adyar, and Velachery branches.
+- **Tenant 2: Manam Restaurant (`manam-restaurant`)** — South Indian dining and QSR with dynamic QR table ordering.
 
-API used by every screen:
+### Tab-Isolated Storage:
+To prevent cross-tab contamination when managers or staff open multiple branches or tenants simultaneously, credentials and active tenant IDs are stored in `sessionStorage`:
+- `restopulse_session_tenant`: The active restaurant identifier (`spotlight-biriyani` or `manam-restaurant`).
+- `restopulse_auth_role`: The authenticated user role (`owner`, `cashier`, `chef`, `admin`).
+- Offline sales and local transactions fallback to `localStorage` (`slb.pos.v1`).
 
-| Function | Purpose |
-| --- | --- |
-| `useDB()` | subscribe to the store; returns `null` during SSR, data after hydration |
-| `setDB(mutate)` | mutate + save + notify all screens |
-| `buildSale({...})` | the single source of truth for profit maths |
-| `filterSales`, `totals`, `itemBreakdown`, `dailySeries` | reporting helpers |
-| `forecastQty(sales, itemId, date)` | weighted average of last 4 same weekdays |
-| `exportJSON` / `importJSON` / `resetDB` | backup, restore, demo reset |
+---
 
-Screens never touch `localStorage` directly, which is why the cloud upgrade is contained.
+## 3. High-Availability Cloud Edge Infrastructure
 
-## Moving to Cloud (multi-branch, logins, one shared database)
+### Why Cloudflare Workers:
+1. **Unlimited Bandwidth:** Unlike Vercel which caps free tier transfers at 10 GB/month and suspends production with `HTTP 402 Payment Required`, Cloudflare Workers provides **unlimited bandwidth** with zero risk of mid-rush POS outages.
+2. **Global Anycast Edge:** Sub-30ms execution times across Indian edge nodes (Chennai, Mumbai, Bangalore, Hyderabad).
+3. **Automated CI/CD:** Pushing commits to GitHub `main` automatically triggers Cloudflare Workers CI/CD build pipelines using Nitro (`npx wrangler deploy`).
 
-1. Enable Lovable Cloud (Supabase under the hood) in the project.
-2. Create tables mirroring the types: `branches`, `channels`, `items`, `sales`,
-   `sale_lines`, `stock_items`, `stock_moves`, `settings`, plus `profiles` and a
-   separate `user_roles` table (roles must never live on the profile row).
-3. Enable RLS on every table; scope rows by branch and role
-   (`owner` sees all branches, `cashier` sees their own).
-4. Replace the body of `useDB`/`setDB` with TanStack Query hooks calling server
-   functions. UI components stay unchanged because they only use the store API.
-5. Keep writing bills to localStorage first and syncing when online — that gives
-   offline billing, which is a genuine selling point in Chennai power cuts.
+### Cloud Database (Neon Serverless PostgreSQL):
+- Hosted in AWS Singapore (`ap-southeast-1`) for lowest latency to India.
+- Provisioned tables: `Branch`, `Channel`, `DishItem`, `KitchenBatch`, `Sale`, `SaleLine`, `StockItem`, `StockMove`.
+- Bidirectional synchronization allows instant offline billing at the counter and automatic cloud persistence.
 
-Ballpark effort: 2–4 focused days.
+---
 
-## Why localStorage first (talking point for the owner)
-Zero monthly cost, works with no internet, nothing to log into, and no data leaves
-his shop. When he opens a 4th branch or wants to check sales from home, the cloud
-upgrade becomes worth paying for.
+## 4. Hardware Peripherals & Printing
+
+- **Receipt Printing:** Browser print media stylesheet formatted for 80mm and 58mm ESC/POS desktop and handheld thermal printers.
+- **Cash Drawer Solenoid:** 24V drawer trigger upon successful bill settlement.
+- **Web Audio Chimes:** Real-time synthesized cash-register audio chimes generated via the HTML5 Web Audio API without external audio assets.
