@@ -908,7 +908,7 @@ function ManamShowcasePage() {
                 </span>
               </div>
               <p className="text-[11px] font-semibold text-slate-600 font-mono">
-                {(typeof window !== "undefined" ? window.location.origin : "https://spotlight-biriyani.manikandansoundar24.workers.dev")}/manam?table={selectedTableQr}
+                {(typeof window !== "undefined" ? window.location.origin : "https://restopulse.restopulse-cloud.workers.dev")}/manam?table={selectedTableQr}
               </p>
             </div>
 
