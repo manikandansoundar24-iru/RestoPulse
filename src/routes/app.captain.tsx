@@ -538,15 +538,23 @@ function CaptainTerminalPage() {
                   return (
                     <div
                       key={dish.id}
-                      className="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-3 shadow-2xs hover:border-primary/50 transition-all"
+                      onClick={() => handleAddItem(dish)}
+                      className={`group relative flex flex-col justify-between rounded-xl border p-2.5 text-left shadow-2xs cursor-pointer transition-all active:scale-[0.98] ${
+                        draftQty > 0
+                          ? "border-primary bg-primary/5 shadow-ember"
+                          : "border-border/80 bg-card hover:border-primary/50 hover:shadow-card"
+                      }`}
                     >
                       <div>
-                        <div className="flex items-start justify-between gap-1">
-                          <span className="font-extrabold text-xs sm:text-sm text-foreground leading-snug line-clamp-2">
+                        <div className="flex items-start justify-between gap-1.5">
+                          <span className="font-extrabold text-xs sm:text-sm text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
                             {dish.name}
                           </span>
                           {existingQty > 0 && (
-                            <span className="rounded bg-primary/10 text-primary text-[9px] font-black px-1.5 py-0.5 shrink-0">
+                            <span
+                              className="rounded bg-muted text-muted-foreground text-[9px] font-bold px-1.5 py-0.5 shrink-0 border border-border/60"
+                              title="Already sent to kitchen on this table"
+                            >
                               {existingQty} ordered
                             </span>
                           )}
@@ -559,42 +567,44 @@ function CaptainTerminalPage() {
                         </div>
                       </div>
 
-                      {/* Stepper Controls */}
-                      <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-muted-foreground">
-                          {draftQty > 0 ? `${draftQty} in draft` : "Add to KOT"}
-                        </span>
-
-                        {draftQty > 0 ? (
-                          <div className="flex items-center gap-1 rounded-xl border border-primary/40 bg-primary/5 p-0.5">
+                      {/* Compact Quick Stepper when selected in current round */}
+                      {draftQty > 0 && (
+                        <div
+                          className="mt-2 pt-1.5 border-t border-primary/20 flex items-center justify-between"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span className="text-[11px] font-bold text-primary">
+                            {draftQty} in round
+                          </span>
+                          <div className="flex items-center gap-1 rounded-lg border border-primary/40 bg-card p-0.5">
                             <button
                               type="button"
-                              onClick={() => handleRemoveItem(dish.id)}
-                              className="size-7 flex items-center justify-center rounded-lg bg-card border border-border text-foreground hover:bg-muted active:scale-95 transition-transform"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveItem(dish.id);
+                              }}
+                              className="size-6 flex items-center justify-center rounded-md bg-muted text-foreground hover:bg-destructive/10 hover:text-destructive active:scale-95 transition-transform"
+                              title="Decrease"
                             >
-                              <Minus className="size-3.5" />
+                              <Minus className="size-3" />
                             </button>
-                            <span className="min-w-6 text-center font-black text-xs text-primary">
+                            <span className="min-w-5 text-center font-black text-xs text-primary">
                               {draftQty}
                             </span>
                             <button
                               type="button"
-                              onClick={() => handleAddItem(dish)}
-                              className="size-7 flex items-center justify-center rounded-lg bg-primary text-primary-foreground hover:opacity-90 active:scale-95 transition-transform"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddItem(dish);
+                              }}
+                              className="size-6 flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:opacity-90 active:scale-95 transition-transform"
+                              title="Increase"
                             >
-                              <Plus className="size-3.5" />
+                              <Plus className="size-3" />
                             </button>
                           </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleAddItem(dish)}
-                            className="flex items-center gap-1 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/30 px-3 py-1.5 text-xs font-black transition-all active:scale-95"
-                          >
-                            <Plus className="size-3.5" /> Add
-                          </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })

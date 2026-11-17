@@ -27,10 +27,11 @@ function Reports() {
 
   if (!db) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
-  const sales = filterSales(db, { days, branchId: branch, channel });
+  const activeTenant = getActiveTenant(db);
+  const sales = filterSales(db, { days, branchId: branch, channel, tenantId: activeTenant.id });
   const t = totals(sales);
   const rows = itemBreakdown(sales);
-  const allSales = filterSales(db, { days: 60, branchId: branch });
+  const allSales = filterSales(db, { days: 60, branchId: branch, tenantId: activeTenant.id });
 
   const exportCsv = () => {
     const header = "Item,Plates sold,Revenue,Profit,Profit per plate,Suggested prep tomorrow";
@@ -58,7 +59,7 @@ function Reports() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3 print:hidden">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-display font-black tracking-tight">REPORTS &amp; FORECAST</h1>
+          <h1 className="text-xl sm:text-2xl font-display font-bold tracking-tight">REPORTS &amp; FORECAST</h1>
           <p className="text-sm text-muted-foreground">
             Item-wise plates sold, profit per plate, and how many to prep tomorrow.
           </p>

@@ -107,7 +107,7 @@ function Items() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl sm:text-4xl font-display font-black tracking-tight">MENU &amp; COSTS</h1>
+        <h1 className="text-xl sm:text-2xl font-display font-bold tracking-tight">MENU &amp; COSTS</h1>
         <p className="text-sm text-muted-foreground">
           Profit accuracy depends on these numbers. Update the plate cost whenever chicken, mutton or
           rice prices move.

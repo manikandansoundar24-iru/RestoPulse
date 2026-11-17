@@ -88,7 +88,7 @@ function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-display font-black tracking-tight">DASHBOARD</h1>
+          <h1 className="text-xl sm:text-2xl font-display font-bold tracking-tight">DASHBOARD</h1>
           <p className="text-sm text-muted-foreground">
             Real profit after food cost, platform commission and packing.
           </p>

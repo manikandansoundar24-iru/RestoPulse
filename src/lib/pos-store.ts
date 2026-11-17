@@ -671,6 +671,55 @@ export function isSameDay(dateStr?: string | Date): boolean {
 }
 
 /**
+ * Robust Multi-Tenant Matcher:
+ * Handles "manam" vs "manam-restaurant", and "spotlight" vs "spotlight-biriyani".
+ * Also safely treats undefined/legacy records as belonging to the primary tenant.
+ */
+export function isTenantMatch(saleTenantId?: string | null, targetTenantId?: string | null): boolean {
+  if (!targetTenantId) return true;
+  const cleanTarget = targetTenantId.trim().toLowerCase();
+  const cleanSale = (saleTenantId || "").trim().toLowerCase();
+
+  if (!cleanSale) {
+    // Legacy sales without tenantId belonged to spotlight-biriyani / restopulse
+    return cleanTarget === "spotlight-biriyani" || cleanTarget === "spotlight" || cleanTarget === "restopulse";
+  }
+
+  if (cleanSale === cleanTarget) return true;
+
+  // Handle manam vs manam-restaurant
+  if (cleanTarget.startsWith("manam") && cleanSale.startsWith("manam")) return true;
+
+  // Handle spotlight vs spotlight-biriyani vs restopulse
+  if (
+    (cleanTarget.startsWith("spotlight") || cleanTarget.startsWith("restopulse")) &&
+    (cleanSale.startsWith("spotlight") || cleanSale.startsWith("restopulse"))
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Robust Shift & Date Matcher:
+ * Restaurants run late-night shifts (e.g. Manam open till 4:00 AM).
+ * Matches sales either on the exact same calendar day OR within the last 24 hours.
+ */
+export function isTodayOrRecent(dateStr?: string | Date): boolean {
+  if (!dateStr) return false;
+  if (isSameDay(dateStr)) return true;
+  try {
+    const time = new Date(dateStr).getTime();
+    if (isNaN(time)) return false;
+    const diffHours = (Date.now() - time) / (1000 * 60 * 60);
+    return diffHours >= 0 && diffHours < 24;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Dynamically computes remaining plates and live batch status
  * based on actual sales records for that branch today.
  */
@@ -706,11 +755,7 @@ export function getLiveBatchStatus(db: DB, branchId?: string, tenantId?: string)
   const soldToday = sales
     .filter((s) => {
       if (!s || typeof s.date !== "string") return false;
-      const matchTenant = Boolean(
-        s.tenantId === currentTenantId ||
-        (currentTenantId.startsWith("manam") && (s.tenantId?.startsWith("manam") || !s.tenantId && activeT.id.startsWith("manam"))) ||
-        ((currentTenantId === "spotlight-biriyani" || currentTenantId === "spotlight") && (!s.tenantId || s.tenantId?.startsWith("spotlight")))
-      );
+      const matchTenant = isTenantMatch(s.tenantId, currentTenantId);
       if (!matchTenant) return false;
       const matchBranch =
         !s.branchId ||
@@ -719,11 +764,7 @@ export function getLiveBatchStatus(db: DB, branchId?: string, tenantId?: string)
         Boolean(activeT.branches && activeT.branches.some((b) => b.id === s.branchId));
       if (!matchBranch) return false;
 
-      // Shift-aware / timezone-robust match: either same calendar day or within last 24 hours
-      if (isSameDay(s.date)) return true;
-      const saleTime = new Date(s.date).getTime();
-      const diffHours = (Date.now() - saleTime) / (1000 * 60 * 60);
-      return diffHours >= 0 && diffHours < 24;
+      return isTodayOrRecent(s.date);
     })
     .reduce((acc, s) => {
       let bPlates = 0;
@@ -924,6 +965,7 @@ function seed(): DB {
       day.setHours(hour, Math.floor(Math.random() * 60), 0, 0);
       sales.push(
         buildSale({
+          tenantId: "spotlight-biriyani",
           date: day.toISOString(),
           branchId: branch.id,
           channel,
@@ -935,6 +977,10 @@ function seed(): DB {
       );
     }
   }
+
+  // Also seed 21 days of believable demo sales for Manam Restaurant (Multi-Cuisine)
+  const manamSeed = generateManamSeedSales(channels);
+  sales.push(...manamSeed);
 
   return {
     branches,
@@ -986,6 +1032,51 @@ export function buildSale(input: {
     profit: +(net - cogs - commission - packaging).toFixed(2),
     payment: input.payment,
   };
+}
+
+export function generateManamSeedSales(channels: Channel[]): Sale[] {
+  const sales: Sale[] = [];
+  const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)]!;
+  const manamItems = MANAM_DEFAULT_ITEMS.filter((i) =>
+    i.category === "biryani" || i.category === "parotta" || i.category === "starter" || i.category === "chinese"
+  );
+  for (let d = 20; d >= 0; d--) {
+    const day = new Date();
+    day.setDate(day.getDate() - d);
+    const orders = 18 + Math.floor(Math.random() * 14);
+    for (let o = 0; o < orders; o++) {
+      const channel = pick(channels).id;
+      const lineCount = 1 + Math.floor(Math.random() * 3);
+      const lines: SaleLine[] = [];
+      for (let l = 0; l < lineCount; l++) {
+        const it = pick(manamItems);
+        if (lines.some((x) => x.itemId === it.id)) continue;
+        lines.push({
+          itemId: it.id,
+          name: it.name,
+          qty: 1 + Math.floor(Math.random() * 2),
+          price: channel === "counter" ? it.price : it.onlinePrice,
+          cost: it.cost,
+        });
+      }
+      if (!lines.length) continue;
+      const hour = 12 + Math.floor(Math.random() * 10);
+      day.setHours(hour, Math.floor(Math.random() * 60), 0, 0);
+      sales.push(
+        buildSale({
+          tenantId: "manam-restaurant",
+          date: day.toISOString(),
+          branchId: "velachery-phoenix",
+          channel,
+          lines,
+          discount: Math.random() < 0.1 ? 20 : 0,
+          payment: channel === "counter" ? (Math.random() < 0.5 ? "cash" : "upi") : "online",
+          channels,
+        }),
+      );
+    }
+  }
+  return sales;
 }
 
 /* --------------------------------- storage -------------------------------- */
@@ -1064,6 +1155,9 @@ if (typeof window !== "undefined") {
         if (event.data?.type === "SLB_STORE_UPDATED") {
           cache = null;
           listeners.forEach((l) => l());
+          try {
+            window.dispatchEvent(new CustomEvent("slb_store_updated", { detail: Date.now() }));
+          } catch {}
         }
       };
     } catch {
@@ -1075,6 +1169,9 @@ if (typeof window !== "undefined") {
     if (e.key === KEY) {
       cache = null;
       listeners.forEach((l) => l());
+      try {
+        window.dispatchEvent(new CustomEvent("slb_store_updated", { detail: Date.now() }));
+      } catch {}
     }
   });
 
@@ -1261,6 +1358,13 @@ export function getDB(): DB {
       needsPersist = true;
     }
   }
+
+  // Ensure Manam demo sales are present so Manam Restaurant dashboard and reports are rich
+  if (Array.isArray(cache.sales) && !cache.sales.some((s) => isTenantMatch(s.tenantId, "manam-restaurant"))) {
+    const manamSeed = generateManamSeedSales(cache.channels);
+    cache.sales.push(...manamSeed);
+    needsPersist = true;
+  }
   if (needsPersist) {
     persist();
   }
@@ -1317,9 +1421,11 @@ export function importJSON(raw: string) {
 /** Subscribe to the store. Returns a client-hydrated snapshot (null on server). */
 export function useDB(): DB | null {
   const [db, setLocal] = useState<DB | null>(null);
+  const [, setRev] = useState<number>(0);
   useEffect(() => {
     const sync = () => {
       const current = getDB();
+      setRev(Date.now());
       setLocal({
         ...current,
         sales: [...(current.sales || [])],
@@ -1377,7 +1483,7 @@ export function filterSales(
   const targetTenantId = opts.tenantId || currentTenant.id;
   return db.sales.filter((s) => {
     if (!s || !s.date) return false;
-    const matchTenant = s.tenantId ? s.tenantId === targetTenantId : targetTenantId === "spotlight-biriyani";
+    const matchTenant = isTenantMatch(s.tenantId, targetTenantId);
     if (!matchTenant) return false;
     const matchTime = new Date(s.date).getTime() >= from;
     const matchBranch = !opts.branchId || opts.branchId === "all" || s.branchId === opts.branchId;

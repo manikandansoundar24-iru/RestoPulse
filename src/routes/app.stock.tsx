@@ -146,7 +146,7 @@ function Stock() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-display font-black tracking-tight">RAW MATERIAL &amp; KITCHEN INVENTORY</h1>
+          <h1 className="text-xl sm:text-2xl font-display font-bold tracking-tight">RAW MATERIAL &amp; KITCHEN INVENTORY</h1>
           <p className="text-sm text-muted-foreground">
             Track daily kitchen inventory on hand, reorder alerts, and purchases. Total stock valuation:{" "}
             <span className="font-semibold text-foreground font-mono">{inr(stockValue)}</span>.

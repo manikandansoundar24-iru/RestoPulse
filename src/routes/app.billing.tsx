@@ -69,6 +69,8 @@ import {
   inr,
   isDegBatchActiveForTenant,
   isSameDay,
+  isTenantMatch,
+  isTodayOrRecent,
   normalizeCategory,
   recordShiftClose,
   sanitizeAndDeduplicateItems,
@@ -388,68 +390,59 @@ function DishCard({
         </div>
       </div>
 
-      {/* Direct Card Quantity Indicator & Step / Direct Type Controls */}
-      <div className="mt-1.5 flex items-center justify-between border-t border-border/40 pt-1">
-        {isInCart ? (
-          <div className="flex w-full items-center justify-between gap-1">
-            <span className="text-[10px] font-bold text-primary truncate">
-              {inCartQty > 0 ? `${inCartQty} in cart` : "Qty..."}
-            </span>
-            <div className="flex items-center rounded-md border border-border bg-card px-0.5 py-0.5">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStep(-1);
-                }}
-                className="rounded p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                title="Decrease"
-              >
-                <Minus className="size-2.5" />
-              </button>
-              <input
-                type="number"
-                min="1"
-                value={inCartQty === 0 ? "" : inCartQty}
-                placeholder="0"
-                onFocus={(e) => e.target.select()}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  onUpdateQty(e.target.value);
-                }}
-                onBlur={onBlurQty}
-                className="w-8 text-center text-xs font-black bg-muted/40 rounded border border-border/80 focus:border-primary focus:bg-background focus:outline-none py-0.2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                title="Type quantity directly"
-              />
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStep(1);
-                }}
-                disabled={!canIncreaseDeg}
-                className="rounded p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                title="Increase"
-              >
-                <Plus className="size-2.5" />
-              </button>
-            </div>
+      {/* Direct Card Quantity Stepper when in cart or Sold Out alert */}
+      {isInCart && (
+        <div className="mt-1 flex items-center justify-between border-t border-border/40 pt-1">
+          <span className="text-[10px] font-bold text-primary truncate">
+            {inCartQty > 0 ? `${inCartQty} in cart` : "Qty..."}
+          </span>
+          <div className="flex items-center rounded-md border border-border bg-card px-0.5 py-0.5" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onStep(-1);
+              }}
+              className="rounded p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="Decrease"
+            >
+              <Minus className="size-2.5" />
+            </button>
+            <input
+              type="number"
+              min="1"
+              value={inCartQty === 0 ? "" : inCartQty}
+              placeholder="0"
+              onFocus={(e) => e.target.select()}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => {
+                e.stopPropagation();
+                onUpdateQty(e.target.value);
+              }}
+              onBlur={onBlurQty}
+              className="w-8 text-center text-xs font-black bg-muted/40 rounded border border-border/80 focus:border-primary focus:bg-background focus:outline-none py-0.2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              title="Type quantity directly"
+            />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onStep(1);
+              }}
+              disabled={!canIncreaseDeg}
+              className="rounded p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              title="Increase"
+            >
+              <Plus className="size-2.5" />
+            </button>
           </div>
-        ) : isSoldOut ? (
-          <div className="flex w-full items-center justify-center gap-1 text-[11px] font-bold text-rose-500 py-0.5">
-            <AlertCircle className="size-3" /> Sold Out
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={onAdd}
-            className="flex w-full items-center justify-center gap-1 text-[11px] font-bold text-muted-foreground hover:text-primary transition-colors py-0.5"
-          >
-            <Plus className="size-3" /> Add
-          </button>
-        )}
-      </div>
+        </div>
+      )}
+      {isSoldOut && (
+        <div className="mt-1 flex w-full items-center justify-center gap-1 text-[11px] font-bold text-rose-500 py-0.5 border-t border-border/40">
+          <AlertCircle className="size-3" /> Sold Out
+        </div>
+      )}
     </div>
   );
 }
@@ -635,14 +628,14 @@ function Billing() {
     return db.sales
       .filter((s) => {
         if (!s || typeof s.date !== "string") return false;
-        const matchTenant = s.tenantId ? s.tenantId === currentTenantId : currentTenantId === "spotlight-biriyani";
+        const matchTenant = isTenantMatch(s.tenantId, currentTenantId);
         if (!matchTenant) return false;
         const matchBranch =
           s.branchId === activeBranch ||
           !s.branchId ||
           (activeBranch === "taramani" && s.branchId === "tharamani") ||
           Boolean(activeTenant.branches && activeTenant.branches.some((b) => b.id === s.branchId));
-        return matchBranch && isSameDay(s.date);
+        return matchBranch && isTodayOrRecent(s.date);
       })
       .slice()
       .reverse();
@@ -665,9 +658,9 @@ function Billing() {
   const drawerVariance = countedPhysicalCash === "" ? 0 : countedNum - expectedCashInDrawer;
 
   const filteredHistory = useMemo(() => {
-    const currentTenantId = db?.activeTenantId || "spotlight-biriyani";
+    const currentTenantId = activeTenant.id || db?.activeTenantId || "spotlight-biriyani";
     const rawSales = Array.isArray(db?.sales)
-      ? db.sales.filter((s) => s && (s.tenantId ? s.tenantId === currentTenantId : currentTenantId === "spotlight-biriyani"))
+      ? db.sales.filter((s) => s && isTenantMatch(s.tenantId, currentTenantId))
       : [];
     const source = (historySearch && historySearch.trim().length > 0)
       ? rawSales.slice().reverse()
@@ -789,34 +782,70 @@ function Billing() {
   const isCartOverDeg = currentCartDegPlates > liveBatch.platesLeft;
 
   const degDishesStats = useMemo(() => {
+    const currentTenantId = activeTenant.id || "spotlight-biriyani";
     const sales = (db?.sales || []).filter((s) => {
       if (!s || typeof s.date !== "string") return false;
-      const matchTenant = s.tenantId
-        ? (s.tenantId === activeTenant.id ||
-           (activeTenant.id.startsWith("manam") && s.tenantId.startsWith("manam")) ||
-           (activeTenant.id.startsWith("spotlight") && s.tenantId.startsWith("spotlight")))
-        : (activeTenant.id === "spotlight-biriyani" || activeTenant.id.startsWith("spotlight"));
+      const matchTenant = isTenantMatch(s.tenantId, currentTenantId);
       if (!matchTenant) return false;
-      if (isSameDay(s.date)) return true;
-      const diffHours = (Date.now() - new Date(s.date).getTime()) / 36e5;
-      return diffHours >= 0 && diffHours < 24;
+      return isTodayOrRecent(s.date);
     });
-    const soldMap: Record<string, number> = {};
-    sales.forEach((s) => {
-      (s.lines || []).forEach((l) => {
-        soldMap[l.itemId] = (soldMap[l.itemId] || 0) + (l.qty || 0);
-        if (l.name) soldMap[l.name.toLowerCase().trim()] = (soldMap[l.name.toLowerCase().trim()] || 0) + (l.qty || 0);
-      });
-    });
+
     const degDishes = tenantItems.filter((i) => isDegItem(i));
     return degDishes.map((dish) => {
-      const byId = soldMap[dish.id] || 0;
-      const byName = soldMap[dish.name.toLowerCase().trim()] || 0;
-      const sold = Math.max(byId, byName);
+      let count = 0;
+      const dName = dish.name.toLowerCase().trim();
+      const dClean = dName.replace(/[^a-z0-9]/g, " ");
+
+      sales.forEach((s) => {
+        (s.lines || []).forEach((l) => {
+          if (!l) return;
+          const lId = l.itemId;
+          const lName = (l.name || "").toLowerCase().trim();
+          const lClean = lName.replace(/[^a-z0-9]/g, " ");
+          const qty = l.qty || 1;
+
+          // 1. Exact Item ID match
+          if (lId && lId === dish.id) {
+            count += qty;
+            return;
+          }
+          // 2. Exact Name match
+          if (lName && lName === dName) {
+            count += qty;
+            return;
+          }
+
+          // 3. Intelligent fuzzy / portion-aware match
+          // Handles e.g. "Seeraga Samba Plain Biriyani / Kushka (Half)" vs "Seeraga Samba Plain Biriyani"
+          const dIsHalf = dClean.includes("half");
+          const lIsHalf = lClean.includes("half");
+          const dIsFull = dClean.includes("full") || (!dIsHalf && !dClean.includes("half"));
+          const lIsFull = lClean.includes("full") || (!lIsHalf && !lClean.includes("half"));
+
+          // Disallow matching Half with Full
+          if (dIsHalf && lIsFull && !lIsHalf) return;
+          if (dIsFull && lIsHalf && !dIsHalf) return;
+
+          const isFuzzy =
+            (dName.includes(lName) && lName.length > 4) ||
+            (lName.includes(dName) && dName.length > 4) ||
+            (dClean.includes("seeraga") && lClean.includes("seeraga")) ||
+            (dClean.includes("plain") && lClean.includes("plain")) ||
+            (dClean.includes("chicken 65") && lClean.includes("chicken 65")) ||
+            (dClean.includes("kadai") && lClean.includes("kadai")) ||
+            (dClean.includes("mutton") && lClean.includes("mutton")) ||
+            (dClean.includes("egg") && lClean.includes("egg"));
+
+          if (isFuzzy) {
+            count += qty;
+          }
+        });
+      });
+
       return {
         id: dish.id,
         name: dish.name,
-        sold,
+        sold: count,
       };
     });
   }, [db, activeTenant, tenantItems]);

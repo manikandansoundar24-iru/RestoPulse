@@ -478,6 +478,7 @@ function AppLayout() {
             <Link
               key={l.to}
               to={l.to}
+              search={(prev: any) => ({ ...prev, tenant: activeTenant.id })}
               activeOptions={{ exact: "exact" in l ? l.exact : false }}
               activeProps={{ className: "bg-primary/15 text-primary font-bold shadow-xs border-primary/30" }}
               className="flex shrink-0 items-center gap-1.5 sm:gap-2 rounded-lg border border-transparent px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all whitespace-nowrap"

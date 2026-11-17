@@ -82,7 +82,7 @@ function Settings() {
       {/* Top Header & Settings Tab Switcher */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-display font-black tracking-tight">SETTINGS</h1>
+          <h1 className="text-xl sm:text-2xl font-display font-bold tracking-tight">SETTINGS</h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
             Store identity, thermal hardware, delivery aggregator rates, and developer configuration.
           </p>
