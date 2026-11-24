@@ -461,6 +461,7 @@ function Billing() {
   const activeBranch = activeTenant.branches?.find((b) => b.id === activeBranchId);
   const activeModules = getActiveBranchModules(activeTenant, activeBranchId);
   const isDegBatchActive = isDegBatchActiveForTenant(activeTenant, activeBranchId);
+  const [salesTick, setSalesTick] = useState(0);
   const [cat, setCat] = useState<Category | "all">("biryani");
   const [lines, setLines] = useState<SaleLine[]>([]);
   const [channel, setChannel] = useState<ChannelId>("counter");
@@ -883,7 +884,6 @@ function Billing() {
     }
   }, []); // Run strictly ONCE on mount — never on db/table mutations to avoid scroll-fighting/shaking!
 
-  const [salesTick, setSalesTick] = useState(0);
   const [editBatchModalOpen, setEditBatchModalOpen] = useState(false);
   const [newBatchCapacity, setNewBatchCapacity] = useState("");
   const [newChickenCap, setNewChickenCap] = useState("");
