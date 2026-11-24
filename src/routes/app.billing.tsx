@@ -645,7 +645,7 @@ function Billing() {
       })
       .slice()
       .reverse();
-  }, [db, activeTenant]);
+  }, [db, activeTenant, salesTick]);
 
   const todayCashTotal = useMemo(() => {
     return todaySales.filter((s) => s.payment === "cash").reduce((acc, s) => acc + (s.net || 0), 0);
@@ -769,7 +769,7 @@ function Billing() {
       isSoldOut: statusInfo.isSoldOut,
       breakdown: statusInfo.breakdown,
     };
-  }, [db, activeTenant]);
+  }, [db, activeTenant, salesTick]);
 
   const isDegItem = (itemOrLine: { name?: string; category?: string } | null | undefined) => {
     if (!isDegBatchActive) return false;
@@ -835,6 +835,7 @@ function Billing() {
           const isFuzzy =
             (dName.includes(lName) && lName.length > 4) ||
             (lName.includes(dName) && dName.length > 4) ||
+            (dClean.includes("beef") && lClean.includes("beef")) ||
             (dClean.includes("seeraga") && lClean.includes("seeraga")) ||
             (dClean.includes("plain") && lClean.includes("plain")) ||
             (dClean.includes("chicken 65") && lClean.includes("chicken 65")) ||
@@ -854,7 +855,7 @@ function Billing() {
         sold: count,
       };
     });
-  }, [db, activeTenant, tenantItems]);
+  }, [db, activeTenant, tenantItems, salesTick]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -882,12 +883,14 @@ function Billing() {
     }
   }, []); // Run strictly ONCE on mount — never on db/table mutations to avoid scroll-fighting/shaking!
 
+  const [salesTick, setSalesTick] = useState(0);
   const [editBatchModalOpen, setEditBatchModalOpen] = useState(false);
   const [newBatchCapacity, setNewBatchCapacity] = useState("");
   const [newChickenCap, setNewChickenCap] = useState("");
   const [newMuttonCap, setNewMuttonCap] = useState("");
 
   const openEditBatch = () => {
+    const isSpotlight = activeTenant.id === "spotlight-biriyani" || (activeTenant.businessName || "").toLowerCase().includes("spotlight");
     const currentBranch = activeTenant.branches?.some((b) => b.id === db?.settings.activeBranchId)
       ? (db?.settings.activeBranchId || "main")
       : (activeTenant.branches?.[0]?.id || "main");
@@ -896,24 +899,27 @@ function Billing() {
       db?.settings.dailyBatchCapacity?.[activeTenant.id] ??
       120;
     const currentSplit = db?.settings.batchSplit?.[currentBranch] || db?.settings.batchSplit?.[activeTenant.id];
-    const cCap = currentSplit?.chickenCap ?? Math.round(currentCap * 0.65);
-    const mCap = currentSplit?.muttonCap ?? (currentCap - cCap);
+    const cCap = currentSplit?.chickenCap ?? Math.round(currentCap * (isSpotlight ? 0.60 : 0.65));
+    const sCap = isSpotlight
+      ? ((currentSplit as any)?.beefCap ?? Math.max(0, currentCap - cCap))
+      : (currentSplit?.muttonCap ?? Math.max(0, currentCap - cCap));
     setNewBatchCapacity(String(currentCap));
     setNewChickenCap(String(cCap));
-    setNewMuttonCap(String(mCap));
+    setNewMuttonCap(String(sCap));
     setEditBatchModalOpen(true);
   };
 
   const handleSaveBatchCapacity = () => {
+    const isSpotlight = activeTenant.id === "spotlight-biriyani" || (activeTenant.businessName || "").toLowerCase().includes("spotlight");
     const cVal = parseInt(newChickenCap, 10) || 0;
-    const mVal = parseInt(newMuttonCap, 10) || 0;
-    const totalVal = cVal + mVal > 0 ? cVal + mVal : parseInt(newBatchCapacity, 10);
+    const sVal = parseInt(newMuttonCap, 10) || 0;
+    const totalVal = cVal + sVal > 0 ? cVal + sVal : parseInt(newBatchCapacity, 10);
     if (isNaN(totalVal) || totalVal <= 0) {
       toast.error("Please enter a valid plate count (e.g. 160)");
       return;
     }
-    const finalChicken = cVal > 0 ? cVal : Math.round(totalVal * 0.65);
-    const finalMutton = mVal > 0 ? mVal : (totalVal - finalChicken);
+    const finalChicken = cVal > 0 ? cVal : Math.round(totalVal * (isSpotlight ? 0.60 : 0.65));
+    const finalSecondary = sVal > 0 ? sVal : Math.max(0, totalVal - finalChicken);
     const currentBranch = activeTenant.branches?.some((b) => b.id === db?.settings.activeBranchId)
       ? (db?.settings.activeBranchId || "main")
       : (activeTenant.branches?.[0]?.id || "main");
@@ -926,11 +932,17 @@ function Billing() {
       }
       d.settings.dailyBatchCapacity[currentBranch] = totalVal;
       d.settings.dailyBatchCapacity[activeTenant.id] = totalVal;
-      d.settings.batchSplit[currentBranch] = { chickenCap: finalChicken, muttonCap: finalMutton };
-      d.settings.batchSplit[activeTenant.id] = { chickenCap: finalChicken, muttonCap: finalMutton };
+      if (isSpotlight) {
+        d.settings.batchSplit[currentBranch] = { chickenCap: finalChicken, beefCap: finalSecondary, muttonCap: 0 } as any;
+        d.settings.batchSplit[activeTenant.id] = { chickenCap: finalChicken, beefCap: finalSecondary, muttonCap: 0 } as any;
+      } else {
+        d.settings.batchSplit[currentBranch] = { chickenCap: finalChicken, muttonCap: finalSecondary, beefCap: 0 } as any;
+        d.settings.batchSplit[activeTenant.id] = { chickenCap: finalChicken, muttonCap: finalSecondary, beefCap: 0 } as any;
+      }
     });
+    setSalesTick((t) => t + 1);
     setEditBatchModalOpen(false);
-    toast.success(`Updated today's Deg: ${totalVal} plates (${finalChicken} Chicken, ${finalMutton} Mutton)!`);
+    toast.success(`Updated today's Deg: ${totalVal} plates (${finalChicken} Chicken, ${finalSecondary} ${isSpotlight ? "Beef" : "Mutton"})!`);
   };
 
   // Today's Token number counter (strictly synchronized with today's branch sales)
@@ -1166,19 +1178,26 @@ function Billing() {
   };
 
   const openWhatsAppSafely = (phone10Digits: string, message: string) => {
-    const waUrl = `https://api.whatsapp.com/send?phone=91${phone10Digits}&text=${encodeURIComponent(message)}`;
-    const popup = window.open(waUrl, "_blank", "noopener,noreferrer");
-    if (!popup) {
-      navigator.clipboard.writeText(message);
+    const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const waUrl = isMobile
+      ? `https://wa.me/91${phone10Digits}?text=${encodeURIComponent(message)}`
+      : `https://web.whatsapp.com/send?phone=91${phone10Digits}&text=${encodeURIComponent(message)}`;
+    
+    // Always attempt window.open
+    const popup = window.open(waUrl, "_blank");
+    if (!popup || popup.closed || typeof popup.closed === "undefined") {
+      try {
+        navigator.clipboard.writeText(message);
+      } catch {}
       toast.info("WhatsApp popup was blocked. Message copied to clipboard! Click to open.", {
         action: {
           label: "Open WhatsApp",
-          onClick: () => window.open(waUrl, "_blank", "noopener,noreferrer"),
+          onClick: () => window.open(waUrl, "_blank"),
         },
         duration: 8000,
       });
     } else {
-      toast.success(`WhatsApp receipt opened in a new tab for +91 ${phone10Digits}!`);
+      toast.success(`WhatsApp receipt opened for +91 ${phone10Digits}!`);
     }
   };
 
@@ -1201,7 +1220,7 @@ function Billing() {
     toast.success(`Sent Bill to ${p.paperWidth} thermal printer`);
   };
 
-  const saveOrUpdate = (forcedPayment?: Sale["payment"]) => {
+  const saveOrUpdate = (forcedPayment?: Sale["payment"], options?: { skipPrint?: boolean }) => {
     if (!preview || !db) return;
     if (isCartOverDeg) {
       toast.error(`❌ Cannot place order: ${currentCartDegPlates} Deg plates in cart exceeds ${liveBatch.platesLeft} available plates!`);
@@ -1314,10 +1333,15 @@ function Billing() {
       setOrderNote("");
 
       const p = db.settings.printerSettings ?? DEFAULT_PRINTER_SETTINGS;
-      try {
-        printBill(newSale, db.settings.businessName, currentToken, note, tender, change, p);
-      } catch (err) {
-        console.warn("Print receipt dialog suppressed:", err);
+      setSalesTick((t) => t + 1);
+      if (!options?.skipPrint && p.autoCut !== false) {
+        setTimeout(() => {
+          try {
+            printBill(newSale, db.settings.businessName, currentToken, note, tender, change, p);
+          } catch (err) {
+            console.warn("Print receipt dialog suppressed:", err);
+          }
+        }, 60);
       }
       toast.success(`Bill saved & sent to printer! Token #${currentToken} · ${inr(newSale.net)} · Profit ${inr(newSale.profit)}`, {
         icon: <Sparkles className="size-4 text-primary" />,
@@ -1344,10 +1368,9 @@ function Billing() {
       return;
     }
     const validPhone = cleanPhone.slice(-10);
-    const target = saveOrUpdate();
+    const target = saveOrUpdate(payment, { skipPrint: true });
     if (!target) return;
-
-    const msg = buildWhatsAppReceiptMsg(target, customerName.trim() || undefined, todayToken - 1);
+    const msg = buildWhatsAppReceiptMsg(target, customerName.trim() || undefined, todayToken);
     openWhatsAppSafely(validPhone, msg);
     setQuickPhone("");
   };
@@ -1529,7 +1552,7 @@ function Billing() {
                     type="button"
                     onClick={openEditBatch}
                     className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3.5 py-1 text-xs font-black text-primary hover:bg-primary hover:text-white transition-all shadow-2xs"
-                    title="Enter or update today's cooked batch quantity (Chicken & Mutton Deg)"
+                    title={`Enter or update today's cooked batch quantity (Chicken & ${activeTenant.id === "spotlight-biriyani" || (activeTenant.businessName || "").toLowerCase().includes("spotlight") ? "Beef" : "Mutton"} Deg)`}
                   >
                     <Pencil className="size-3" />
                     <span>Edit Deg Capacity</span>
@@ -2384,9 +2407,7 @@ function Billing() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-foreground">
-                    Mutton Deg
-                  </label>
+                  <label className="text-xs font-bold text-foreground">{activeTenant.id === "spotlight-biriyani" || (activeTenant.businessName || "").toLowerCase().includes("spotlight") ? "Beef Deg" : "Mutton Deg"}</label>
                   <input
                     type="number"
                     min="0"

@@ -3,6 +3,9 @@ import { Bike, CheckCircle2, ChevronRight, Clock, Flame, Heart, MapPin, MessageC
 import { useState } from "react";
 
 import heroImg from "@/assets/hero-biriyani.jpg";
+import beefHdImg from "@/assets/beef-biriyani-hd.jpg";
+import chicken65HdImg from "@/assets/chicken65-biriyani-hd.jpg";
+import chickenHdImg from "@/assets/chicken-biriyani-hd.jpg";
 import chickenRealImg from "@/assets/chicken-biriyani-real.jpg";
 import muttonRealImg from "@/assets/mutton-biriyani-real.jpg";
 import kushkaRealImg from "@/assets/kushka-salna-real.jpg";
@@ -93,7 +96,7 @@ export const Route = createFileRoute("/")({
 
 const SIGNATURES = [
   {
-    img: muttonRealImg,
+    img: beefHdImg,
     name: "Beef Biriyani / Beef Rice",
     price: "₹180",
     portion: "Full (Tender Slow-Cooked Beef + Egg)",
@@ -101,7 +104,7 @@ const SIGNATURES = [
     tag: "Crowd Favorite 🔥",
   },
   {
-    img: heroImg,
+    img: chicken65HdImg,
     name: "Chicken 65 Biriyani",
     price: "₹210",
     portion: "Full (Crispy Chicken 65 + Boiled Egg)",
@@ -109,7 +112,7 @@ const SIGNATURES = [
     tag: "Bestseller ⭐",
   },
   {
-    img: chickenRealImg,
+    img: chickenHdImg,
     name: "Chicken Biriyani",
     price: "₹180",
     portion: "Full (2 Tender Chicken Cuts + Egg)",
@@ -147,19 +150,49 @@ const REVIEWS = [
     name: "Mohamed Asif",
     branch: "Kalikundram Main Road",
     rating: 5,
+    tag: "Beef Biriyani & Fry",
+    time: "2 days ago",
     text: "The Beef Biriyani and Beef Fry here is exceptional! Perfect spice level, authentic firewood deg aroma, and very reasonable pricing for the quantity.",
+  },
+  {
+    name: "Syed Ibrahim",
+    branch: "OMR Tech Corridor Regular",
+    rating: 5,
+    tag: "Hot Deg Parcel",
+    time: "4 days ago",
+    text: "Best spot for lunchtime parcels. The beef biriyani with thick brinjal salna is flavorful, non-greasy, and always served piping hot right out of the deg.",
   },
   {
     name: "Karthik Ramasamy",
     branch: "Tharamani Regular",
     rating: 5,
+    tag: "Chicken 65 Biriyani",
+    time: "1 week ago",
     text: "Hands down one of the best local biriyani spots near Kalikundram / OMR. The Chicken 65 Biriyani with spicy salna is top notch comfort food.",
+  },
+  {
+    name: "Dinesh Kumar",
+    branch: "Kazhikundram Hub",
+    rating: 5,
+    tag: "Lightning Fast Service",
+    time: "1 week ago",
+    text: "Super fast parcel service! In less than 2 minutes they pack the hot biriyani with raita, salna, and egg. Worth every rupee.",
   },
   {
     name: "Vignesh Sundaram",
     branch: "Tharamani Hub",
     rating: 5,
-    text: "Consistent quality every single week. Chicken 65 is crispy and freshly fried to order. 4.9★ rating is well deserved!",
+    tag: "Crispy 65 & Salna",
+    time: "2 weeks ago",
+    text: "Consistent quality every single week. Chicken 65 is crispy and freshly fried to order. Beef rice is legendary among local foodies. 4.9★ rating well deserved!",
+  },
+  {
+    name: "Rajesh Kannan",
+    branch: "CSIR Road, Taramani",
+    rating: 5,
+    tag: "Value For Money",
+    time: "3 weeks ago",
+    text: "Pocket-friendly yet authentic dum biriyani. Portion size is generous and meat pieces are tender. Perfect for student & techie lunch cravings.",
   },
 ];
 
@@ -454,22 +487,39 @@ function Home() {
             </div>
           </div>
 
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {REVIEWS.map((rev) => (
-              <div key={rev.name} className="surface-card p-6 flex flex-col justify-between">
+              <div key={rev.name} className="surface-card p-6 flex flex-col justify-between hover:border-primary/50 transition-all shadow-2xs">
                 <div>
-                  <div className="flex gap-1 text-primary">
-                    {[...Array(rev.rating)].map((_, i) => (
-                      <Star key={i} className="size-4 fill-primary" />
-                    ))}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex gap-1 text-primary">
+                      {[...Array(rev.rating)].map((_, i) => (
+                        <Star key={i} className="size-4 fill-primary text-primary" />
+                      ))}
+                    </div>
+                    {rev.time && (
+                      <span className="text-[11px] font-semibold text-muted-foreground">{rev.time}</span>
+                    )}
                   </div>
-                  <p className="mt-4 text-sm italic text-muted-foreground leading-relaxed">
+                  {rev.tag && (
+                    <div className="mt-2.5">
+                      <span className="inline-block rounded-md bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">
+                        {rev.tag}
+                      </span>
+                    </div>
+                  )}
+                  <p className="mt-3 text-sm italic text-muted-foreground leading-relaxed">
                     &quot;{rev.text}&quot;
                   </p>
                 </div>
-                <div className="mt-6 border-t border-border/60 pt-3">
-                  <p className="text-sm font-bold text-foreground">{rev.name}</p>
-                  <p className="text-xs text-muted-foreground">{rev.branch}</p>
+                <div className="mt-5 border-t border-border/60 pt-3 flex items-center gap-3">
+                  <div className="size-9 rounded-full bg-primary/15 text-primary flex items-center justify-center font-display font-black text-xs shrink-0">
+                    {rev.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{rev.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{rev.branch}</p>
+                  </div>
                 </div>
               </div>
             ))}

@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, CheckSquare, Cpu, Eye, FileText, KeyRound, Lock, Plus, Printer, Scissors, ShieldAlert, ShieldCheck, Sparkles, Store, Utensils } from "lucide-react";
+import { Check, CheckSquare, Cpu, Eye, FileText, KeyRound, Lock, Plus, Printer, RefreshCw, RotateCcw, Scissors, ShieldAlert, ShieldCheck, Sparkles, Store, Utensils } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 
-import { DEFAULT_PRINTER_SETTINGS, exportJSON, getActiveTenant, importJSON, resetDB, setDB, useDB } from "@/lib/pos-store";
+import { DEFAULT_PRINTER_SETTINGS, exportJSON, getActiveTenant, importJSON, resetDB, setDB, SPOTLIGHT_DEFAULT_ITEMS, useDB } from "@/lib/pos-store";
 
 export const Route = createFileRoute("/app/settings")({
   component: Settings,
@@ -76,6 +76,26 @@ function Settings() {
       }
     });
   };
+
+  const handleReloadMenuOnly = () => {
+    setDB((d) => {
+      const isSpotlight = activeTenant.id === 'spotlight-biriyani' || (activeTenant.businessName || '').toLowerCase().includes('spotlight');
+      if (isSpotlight) {
+        d.items = SPOTLIGHT_DEFAULT_ITEMS.map((i) => ({ ...i }));
+        const t = d.tenants?.find((x) => x.id === 'spotlight-biriyani' || x.id === 'spotlight');
+        if (t) t.items = SPOTLIGHT_DEFAULT_ITEMS.map((i) => ({ ...i }));
+      }
+    });
+    toast.success('Dishes and Deg Batches reloaded with latest defaults!');
+  };
+
+  const handleResetSeedData = () => {
+    if (window.confirm('Reset POS Data to Factory Seed Defaults?\n\nThis will reset menu dishes to authentic defaults (Beef Biriyani, Chicken 65 Biriyani), reset inventory, and clear old test sales so you have a clean slate for the trial/demo.')) {
+      resetDB();
+      toast.success('POS Seed Data successfully reset to factory defaults!');
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -283,7 +303,7 @@ function Settings() {
 
           {/* Backup & Factory Seed Card */}
           <div className="surface-card p-5">
-            <h2 className="text-lg font-display">LOCAL DATA BACKUP &amp; SYNC</h2>
+            <h2 className="text-lg font-display font-black text-foreground">LOCAL DATA BACKUP, SYNC &amp; RESET</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Export sales &amp; menu to a local JSON file or restore from a previous backup.
             </p>
@@ -311,6 +331,25 @@ function Settings() {
                 className="rounded-lg border border-border bg-card px-3.5 py-2 text-xs font-bold text-foreground hover:border-primary transition-all shadow-2xs"
               >
                 Restore from Backup
+              </button>
+
+              <button
+                type="button"
+                onClick={handleReloadMenuOnly}
+                className="rounded-lg border border-primary/30 bg-primary/10 px-3.5 py-2 text-xs font-bold text-primary hover:bg-primary hover:text-white transition-all shadow-2xs flex items-center gap-1.5"
+                title="Reload default authentic Beef and Chicken dishes without erasing sales"
+              >
+                <RefreshCw className="size-3.5" />
+                Reload Default Dishes &amp; Deg
+              </button>
+              <button
+                type="button"
+                onClick={handleResetSeedData}
+                className="rounded-lg border border-destructive/40 bg-destructive/10 px-3.5 py-2 text-xs font-black text-destructive hover:bg-destructive hover:text-white transition-all shadow-2xs flex items-center gap-1.5 sm:ml-auto"
+                title="Reset test transactions, dishes and kitchen deg to clean state"
+              >
+                <RotateCcw className="size-3.5" />
+                Reset Seed Data (Factory Reset)
               </button>
             </div>
           </div>
