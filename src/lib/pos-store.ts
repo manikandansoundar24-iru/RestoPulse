@@ -513,10 +513,6 @@ export const DEFAULT_TENANTS: TenantConfig[] = [
       { id: "adyar", name: "Adyar", address: "Lattice Bridge Road, Adyar, Chennai", phone: "+91 98844 30710" },
       { id: "velachery", name: "Velachery", address: "100 Feet Road, Velachery, Chennai", phone: "+91 98844 30710" },
     ],
-      },
-      { id: "adyar", name: "Adyar", address: "Lattice Bridge Road, Adyar, Chennai", phone: "+91 90000 00002" },
-      { id: "velachery", name: "Velachery", address: "100 Feet Road, Velachery, Chennai", phone: "+91 90000 00003" },
-    ],
     enabledModules: {
       dashboard: true,
       billing: true,
