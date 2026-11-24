@@ -98,6 +98,7 @@ import {
   type ShiftDayClose,
 } from "@/lib/pos-store";
 import { pushSalesToCloud } from "@/lib/neon-sync";
+import { TenantBrandLogo } from "@/components/brand/BrandLogos";
 
 function renderCategoryIcon(catId: string, className = "size-3.5") {
   switch (catId) {
@@ -1442,8 +1443,8 @@ function Billing() {
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2">
         {/* Left: Terminal Badge + Next Token + Gap/Divider + Core Shortcuts */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-xl px-3 py-1 shadow-2xs">
-            <span className="size-2 rounded-full bg-primary animate-pulse" />
+          <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-xl px-2.5 py-1 shadow-2xs">
+            <TenantBrandLogo tenantId={activeTenant.id} tenantName={activeTenant.businessName} size="xs" />
             <span className="text-xs font-black tracking-tight text-primary uppercase">COUNTER POS</span>
             <span className="text-[11px] text-foreground font-black border-l border-primary/30 pl-2">
               Token #{todayToken}

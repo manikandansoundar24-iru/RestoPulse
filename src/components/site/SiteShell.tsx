@@ -20,6 +20,7 @@ import {
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { SpotlightAssistant } from "./SpotlightAssistant";
+import { SpotlightLogo } from "@/components/brand/BrandLogos";
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -130,13 +131,11 @@ export function SiteShell({ children }: { children: ReactNode }) {
       {/* Clean Restaurant Header */}
       <header className="sticky top-0 z-50 border-b border-border/80 bg-card/95 backdrop-blur-xl shadow-xs">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3">
-          {/* Restaurant Brand Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-ember shadow-ember group-hover:scale-105 transition-transform">
-              <Flame className="size-5 text-white" />
-            </span>
+          {/* Restaurant Brand Logo — Authentic Spot Light Marquee Emblem */}
+          <Link to="/" className="flex items-center gap-3 group">
+            <SpotlightLogo size="md" />
             <div>
-              <span className="font-display text-lg tracking-wide text-foreground leading-none block">
+              <span className="font-display text-lg tracking-wide text-foreground leading-none block font-black">
                 SPOT LIGHT
               </span>
               <span className="text-[0.62rem] font-sans font-bold tracking-[0.25em] text-primary block mt-0.5">

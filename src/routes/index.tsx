@@ -11,6 +11,7 @@ import muttonRealImg from "@/assets/mutton-biriyani-real.jpg";
 import kushkaRealImg from "@/assets/kushka-salna-real.jpg";
 import { SiteShell } from "@/components/site/SiteShell";
 import { ChennaiLeafletMap } from "@/components/map/ChennaiLeafletMap";
+import { SwiggyButton, ZomatoButton, SpotlightLogo } from "@/components/brand/BrandLogos";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -255,6 +256,8 @@ function Home() {
             >
               <MessageCircle className="size-4" /> Order on WhatsApp
             </button>
+            <SwiggyButton />
+            <ZomatoButton />
             <Link
               to="/menu"
               className="rounded-full bg-gradient-ember px-6 py-3 text-sm font-semibold text-primary-foreground shadow-ember transition-transform hover:scale-105"
@@ -285,6 +288,27 @@ function Home() {
             <span className="flex items-center gap-2">
               <Bike className="size-4 text-primary" /> Fast Delivery on Swiggy &amp; Zomato
             </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Online Food Delivery Partners Banner (Swiggy & Zomato) */}
+      <section className="border-y border-border/70 bg-card/60 backdrop-blur-md py-6">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5">
+          <div className="flex items-center gap-3.5">
+            <SpotlightLogo size="sm" />
+            <div>
+              <p className="text-sm font-bold text-foreground">
+                Order Spot Light Biriyani Delivered to Your Doorstep
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Available on Swiggy &amp; Zomato across Kalikundram, Tharamani, OMR, Velachery &amp; Adyar.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <SwiggyButton />
+            <ZomatoButton />
           </div>
         </div>
       </section>
@@ -327,12 +351,18 @@ function Home() {
                 </div>
                 <p className="mt-1 text-xs font-medium text-amber-500">{s.portion}</p>
                 <p className="mt-2 text-sm text-muted-foreground">{s.note}</p>
-                <button
-                  onClick={() => openWhatsApp(selectedBranch, `Hi Spot Light Biriyani! I want to order ${s.name} (${s.price}).`)}
-                  className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-muted/60 py-2 text-xs font-bold text-foreground transition-colors hover:border-emerald-500 hover:bg-emerald-600/10 hover:text-emerald-400"
-                >
-                  <MessageCircle className="size-3.5 text-emerald-500" /> WhatsApp Quick Order
-                </button>
+                <div className="mt-4 space-y-2">
+                  <button
+                    onClick={() => openWhatsApp(selectedBranch, `Hi Spot Light Biriyani! I want to order ${s.name} (${s.price}).`)}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-2.5 text-xs font-bold text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-2xs"
+                  >
+                    <MessageCircle className="size-3.5 text-emerald-500" /> WhatsApp Quick Order
+                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <SwiggyButton size="sm" className="w-full justify-center" />
+                    <ZomatoButton size="sm" className="w-full justify-center" />
+                  </div>
+                </div>
               </div>
             </article>
           ))}

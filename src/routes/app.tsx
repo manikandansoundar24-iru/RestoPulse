@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { getActiveBranchModules, getActiveTenant, getDB, setDB, TenantModules, useDB } from "@/lib/pos-store";
 import { performFullSync } from "@/lib/neon-sync";
+import { RestoPulseLogo, TenantBrandLogo } from "@/components/brand/BrandLogos";
 
 export const Route = createFileRoute("/app")({
   beforeLoad: ({ location }) => {
@@ -285,9 +286,7 @@ function AppLayout() {
             <div className="flex sm:hidden items-center justify-between gap-2 px-3 h-13 border-b border-border/40">
               {/* Left: Brand + Active Restaurant Name */}
               <Link to="/app" className="flex items-center gap-2 min-w-0">
-                <span className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-tr from-amber-500 via-orange-600 to-red-600 text-white shrink-0 shadow-xs">
-                  <Flame className="size-4" />
-                </span>
+                <TenantBrandLogo tenantId={activeTenant.id} tenantName={activeTenant.businessName} size="xs" />
                 <div className="flex flex-col min-w-0">
                   <span className="font-extrabold text-xs text-foreground truncate max-w-[130px] leading-tight">
                     {activeTenant.businessName || "Restaurant"}
@@ -365,9 +364,7 @@ function AppLayout() {
               {/* LEFT: SaaS Platform Brand + Active Restaurant */}
               <div className="flex items-center gap-3 min-w-0">
                 <Link to="/app" className="flex items-center gap-2.5 group shrink-0">
-                  <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 via-orange-600 to-red-600 shadow-md group-hover:scale-105 transition-transform text-white">
-                    <Flame className="size-5" />
-                  </span>
+                  <RestoPulseLogo size="sm" />
                   <div className="flex flex-col">
                     <div className="flex items-center gap-1.5">
                       <span className="font-display font-black text-sm sm:text-base tracking-wide leading-none text-foreground">
@@ -386,14 +383,15 @@ function AppLayout() {
 
               {/* RIGHT: Unified Client Restaurant & Branch Selector */}
               <div className="flex items-center gap-2 shrink-0">
-                {/* 1. Distinct Restaurant Brand Badge */}
-                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs shadow-2xs">
-                  <span className="relative flex h-2 w-2 shrink-0">
+                {/* 1. Distinct Restaurant Brand Badge with Authentic Custom Tenant Logo */}
+                <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs shadow-2xs">
+                  <TenantBrandLogo tenantId={activeTenant.id} tenantName={activeTenant.businessName} size="xs" />
+                  <span className="font-black text-foreground tracking-tight whitespace-nowrap">
+                    {activeTenant.businessName || db?.settings?.businessName || "Restaurant"}
+                  </span>
+                  <span className="relative flex h-2 w-2 shrink-0 ml-0.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                  </span>
-                  <span className="font-extrabold text-foreground tracking-tight whitespace-nowrap">
-                    {activeTenant.businessName || db?.settings?.businessName || "Restaurant"}
                   </span>
                 </div>
 
