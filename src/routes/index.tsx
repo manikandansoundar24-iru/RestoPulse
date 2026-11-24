@@ -27,7 +27,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Spot Light Biriyani — Authentic Chennai Biriyani" },
       {
         property: "og:description",
-        content: "Authentic Chennai biriyani, tender beef, chicken & mutton cuts, kushka. 4.0★ Google rating in Kalikundram, Tharamani, Chennai.",
+        content: "Authentic Chennai biriyani, tender beef & chicken cuts, crispy 65. 4.9★ Google rating (214 reviews) in Kalikundram, Tharamani, Chennai.",
       },
       { property: "og:type", content: "restaurant" },
       { property: "og:locale", content: "en_IN" },
@@ -81,8 +81,8 @@ export const Route = createFileRoute("/")({
           ],
           "aggregateRating": {
             "@type": "AggregateRating",
-            "ratingValue": "4.0",
-            "reviewCount": "185"
+            "ratingValue": "4.9",
+            "reviewCount": "214"
           }
         }),
       },
@@ -93,36 +93,28 @@ export const Route = createFileRoute("/")({
 
 const SIGNATURES = [
   {
+    img: muttonRealImg,
+    name: "Beef Biriyani / Beef Rice",
+    price: "₹180",
+    portion: "Full (Tender Slow-Cooked Beef + Egg)",
+    note: "The signature Kalikundram crowd-puller! Tender melt-in-mouth beef slow-cooked in traditional firewood kitchen deg with aromatic seeraga samba rice.",
+    tag: "Crowd Favorite 🔥",
+  },
+  {
+    img: heroImg,
+    name: "Chicken 65 Biriyani",
+    price: "₹210",
+    portion: "Full (Crispy Chicken 65 + Boiled Egg)",
+    note: "Crispy freshly fried Chicken 65 pieces piled over fragrant dum biriyani rice with boiled egg, ennai kathirikai, and cool raita.",
+    tag: "Bestseller ⭐",
+  },
+  {
     img: chickenRealImg,
     name: "Chicken Biriyani",
     price: "₹180",
     portion: "Full (2 Tender Chicken Cuts + Egg)",
-    note: "Long-grain spiced rice slow-cooked with aromatic whole spices, pure ghee, and rich chicken salna.",
-    tag: "Bestseller 🔥",
-  },
-  {
-    img: muttonRealImg,
-    name: "Beef Biriyani",
-    price: "₹180",
-    portion: "Full (Tender Slow-Cooked Beef + Egg)",
-    note: "Famous Kalikundram specialty! Tender melt-in-mouth beef slow-cooked in traditional firewood kitchen deg.",
-    tag: "Customer Favorite ⭐",
-  },
-  {
-    img: muttonRealImg,
-    name: "Mutton Biriyani",
-    price: "₹280",
-    portion: "Full (Tender Bone-in Cuts)",
-    note: "Melt-in-mouth tender goat meat slow-cooked for 3 hours. Served with ennai kathirikai.",
-    tag: "Chef Special 🍖",
-  },
-  {
-    img: kushkaRealImg,
-    name: "Kushka with Chicken Gravy",
-    price: "₹110",
-    portion: "Pure Ghee Spiced Dum Rice",
-    note: "The authentic Chennai plain biriyani rice infused with pure ghee and rich chicken salna gravy.",
-    tag: "Classic 🍛",
+    note: "Authentic Chennai firewood dum biriyani cooked fresh twice daily. Tender chicken cuts infused with pure ghee and whole spices.",
+    tag: "Classic Chennai Dum 🍗",
   },
 ];
 
@@ -130,7 +122,7 @@ const BUCKET_COMBOS = [
   {
     title: "Family Biriyani Feast Bucket",
     serves: "Serves 4 - 5 Persons",
-    price: "₹899",
+    price: "₹799",
     items: ["4-5 Portions Chennai Biriyani", "4 Boiled Eggs", "Chicken 65 (250g)", "Ennai Kathirikai Dalcha", "Thick Onion Raita", "4 Madurai Bread Halwas"],
     popular: true,
   },
@@ -142,10 +134,10 @@ const BUCKET_COMBOS = [
     popular: false,
   },
   {
-    title: "Mutton & Chicken Grand Feast",
+    title: "Beef & Chicken Grand Feast",
     serves: "Serves 3 - 4 Persons",
-    price: "₹999",
-    items: ["1 Mutton Biriyani", "2 Chicken Biriyanis", "Chicken 65 (250g)", "Double Dalcha & Raita", "Bread Halwa Feast"],
+    price: "₹699",
+    items: ["2 Beef Biriyanis", "2 Chicken Biriyanis", "Chicken 65 (250g)", "Double Dalcha & Raita", "Bread Halwa Feast"],
     popular: false,
   },
 ];
@@ -161,13 +153,13 @@ const REVIEWS = [
     name: "Karthik Ramasamy",
     branch: "Tharamani Regular",
     rating: 5,
-    text: "Hands down one of the best local biriyani spots near Kalikundram / OMR. The chicken is so tender and the kushka with chicken gravy is top notch comfort food.",
+    text: "Hands down one of the best local biriyani spots near Kalikundram / OMR. The Chicken 65 Biriyani with spicy salna is top notch comfort food.",
   },
   {
     name: "Vignesh Sundaram",
     branch: "Tharamani Hub",
     rating: 5,
-    text: "Consistent quality every single week. Chicken 65 is crispy and freshly fried to order. Authentic Chennai biriyani taste without any greasiness.",
+    text: "Consistent quality every single week. Chicken 65 is crispy and freshly fried to order. 4.9★ rating is well deserved!",
   },
 ];
 
@@ -211,7 +203,7 @@ function Home() {
         
         <div className="relative mx-auto max-w-6xl px-5 py-24 sm:py-32">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/50 bg-card/80 px-3.5 py-1 text-xs font-semibold text-primary backdrop-blur-md">
-            <Star className="size-3.5 fill-primary" /> 4.0 ★ Google Rating · Kalikundram, Tharamani
+            <Star className="size-3.5 fill-primary" /> 4.9 ★ Google Rating · 214 Google Reviews (Kalikundram, Tharamani)
           </div>
           
           <h1 className="mt-5 max-w-3xl text-5xl leading-[0.95] sm:text-7xl font-display">

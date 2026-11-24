@@ -383,25 +383,22 @@ export const MANAM_DEFAULT_STOCK: StockItem[] = [
 
 export const SPOTLIGHT_DEFAULT_ITEMS: Item[] = [
   // --- BIRIYANI VARIETIES (Authentic Chennai Dum Deg) ---
-  { id: "slb-bir-1", name: "Chicken Biriyani (Full)", category: "biryani", price: 180, onlinePrice: 229, cost: 96, active: true },
-  { id: "slb-bir-2", name: "Chicken Biriyani (Half)", category: "biryani", price: 110, onlinePrice: 149, cost: 58, active: true },
-  { id: "slb-bir-3", name: "Beef Biriyani (Full)", category: "biryani", price: 180, onlinePrice: 229, cost: 85, active: true },
-  { id: "slb-bir-4", name: "Beef Biriyani (Half)", category: "biryani", price: 120, onlinePrice: 155, cost: 55, active: true },
-  { id: "slb-bir-5", name: "Chicken 65 Biriyani", category: "biryani", price: 210, onlinePrice: 259, cost: 118, active: true },
-  { id: "slb-bir-6", name: "Mutton Biriyani (Full)", category: "biryani", price: 280, onlinePrice: 349, cost: 172, active: true },
-  { id: "slb-bir-7", name: "Mutton Biriyani (Half)", category: "biryani", price: 170, onlinePrice: 219, cost: 104, active: true },
-  { id: "slb-bir-8", name: "Egg Biriyani", category: "biryani", price: 120, onlinePrice: 159, cost: 54, active: true },
-  { id: "slb-bir-9", name: "Kushka (Plain)", category: "kushka", price: 90, onlinePrice: 119, cost: 34, active: true },
-  { id: "slb-bir-10", name: "Kushka with Gravy", category: "kushka", price: 110, onlinePrice: 145, cost: 46, active: true },
+  { id: "slb-bir-1", name: "Beef Biriyani / Beef Rice (Full)", category: "biryani", price: 180, onlinePrice: 229, cost: 85, active: true },
+  { id: "slb-bir-2", name: "Beef Biriyani / Beef Rice (Half)", category: "biryani", price: 120, onlinePrice: 155, cost: 55, active: true },
+  { id: "slb-bir-3", name: "Chicken 65 Biriyani", category: "biryani", price: 210, onlinePrice: 259, cost: 118, active: true },
+  { id: "slb-bir-4", name: "Chicken Biriyani (Full)", category: "biryani", price: 180, onlinePrice: 229, cost: 96, active: true },
+  { id: "slb-bir-5", name: "Chicken Biriyani (Half)", category: "biryani", price: 110, onlinePrice: 149, cost: 58, active: true },
+  { id: "slb-bir-6", name: "Egg Biriyani", category: "biryani", price: 120, onlinePrice: 159, cost: 54, active: true },
+  { id: "slb-bir-7", name: "Kushka (Plain Dum Rice)", category: "kushka", price: 90, onlinePrice: 119, cost: 34, active: true },
 
   // --- STARTERS & NON-VEG SPECIALS ---
-  { id: "slb-str-1", name: "Chicken 65", category: "starter", price: 150, onlinePrice: 189, cost: 82, active: true },
+  { id: "slb-str-1", name: "Chicken 65 (6 Pcs)", category: "starter", price: 150, onlinePrice: 189, cost: 82, active: true },
   { id: "slb-str-2", name: "Beef Fry / Chukka", category: "starter", price: 160, onlinePrice: 209, cost: 70, active: true },
   { id: "slb-str-3", name: "Pepper Chicken", category: "starter", price: 160, onlinePrice: 199, cost: 88, active: true },
   { id: "slb-str-4", name: "Chicken Kebab", category: "starter", price: 170, onlinePrice: 209, cost: 95, active: true },
-  { id: "slb-str-5", name: "Chicken Gravy", category: "starter", price: 70, onlinePrice: 99, cost: 31, active: true },
+  { id: "slb-str-5", name: "Chicken Salna / Gravy", category: "starter", price: 50, onlinePrice: 70, cost: 20, active: true },
 
-  // --- CHINESE / RICE ---
+  // --- CHINESE / FRIED RICE ---
   { id: "slb-chn-1", name: "Beef Fried Rice", category: "chinese", price: 150, onlinePrice: 195, cost: 60, active: true },
   { id: "slb-chn-2", name: "Chicken Fried Rice", category: "chinese", price: 160, onlinePrice: 205, cost: 68, active: true },
   { id: "slb-chn-3", name: "Egg Fried Rice", category: "chinese", price: 130, onlinePrice: 165, cost: 48, active: true },
@@ -410,25 +407,23 @@ export const SPOTLIGHT_DEFAULT_ITEMS: Item[] = [
   { id: "slb-brd-1", name: "Parotta (1 Pc)", category: "parotta", price: 15, onlinePrice: 25, cost: 7, active: true },
 
   // --- DESSERTS & BEVERAGES ---
-  { id: "slb-des-1", name: "Bread Halwa", category: "dessert", price: 60, onlinePrice: 89, cost: 22, active: true },
-  { id: "slb-des-2", name: "Faluda", category: "dessert", price: 90, onlinePrice: 119, cost: 38, active: true },
+  { id: "slb-des-1", name: "Bread Halwa", category: "dessert", price: 50, onlinePrice: 75, cost: 18, active: true },
   { id: "slb-bev-1", name: "Fresh Lemon Soda", category: "beverage", price: 30, onlinePrice: 49, cost: 9, active: true },
 ];
 
 export const SPOTLIGHT_DEFAULT_STOCK: StockItem[] = [
   { id: "slb-stk-1", name: "Basmati Rice", unit: "kg", qty: 120, reorderLevel: 40, costPerUnit: 92 },
   { id: "slb-stk-2", name: "Chicken", unit: "kg", qty: 45, reorderLevel: 25, costPerUnit: 210 },
-  { id: "slb-stk-3", name: "Fresh Tender Beef", unit: "kg", qty: 35, reorderLevel: 20, costPerUnit: 340 },
-  { id: "slb-stk-4", name: "Mutton", unit: "kg", qty: 18, reorderLevel: 15, costPerUnit: 780 },
-  { id: "slb-stk-5", name: "Onion", unit: "kg", qty: 60, reorderLevel: 25, costPerUnit: 38 },
-  { id: "slb-stk-6", name: "Tomato", unit: "kg", qty: 30, reorderLevel: 15, costPerUnit: 32 },
-  { id: "slb-stk-7", name: "Refined Oil", unit: "L", qty: 35, reorderLevel: 20, costPerUnit: 128 },
-  { id: "slb-stk-8", name: "Ghee", unit: "L", qty: 8, reorderLevel: 6, costPerUnit: 620 },
-  { id: "slb-stk-9", name: "Biriyani Masala", unit: "kg", qty: 6, reorderLevel: 4, costPerUnit: 480 },
-  { id: "slb-stk-10", name: "Curd", unit: "kg", qty: 12, reorderLevel: 8, costPerUnit: 60 },
-  { id: "slb-stk-11", name: "Packing Box (Full)", unit: "pcs", qty: 400, reorderLevel: 200, costPerUnit: 9 },
-  { id: "slb-stk-12", name: "Carry Bag", unit: "pcs", qty: 700, reorderLevel: 300, costPerUnit: 3 },
-  { id: "slb-stk-13", name: "LPG Cylinder", unit: "pcs", qty: 3, reorderLevel: 2, costPerUnit: 1850 },
+  { id: "slb-stk-3", name: "Fresh Tender Beef", unit: "kg", qty: 40, reorderLevel: 20, costPerUnit: 340 },
+  { id: "slb-stk-4", name: "Onion", unit: "kg", qty: 60, reorderLevel: 25, costPerUnit: 38 },
+  { id: "slb-stk-5", name: "Tomato", unit: "kg", qty: 30, reorderLevel: 15, costPerUnit: 32 },
+  { id: "slb-stk-6", name: "Refined Oil", unit: "L", qty: 35, reorderLevel: 20, costPerUnit: 128 },
+  { id: "slb-stk-7", name: "Ghee", unit: "L", qty: 8, reorderLevel: 6, costPerUnit: 620 },
+  { id: "slb-stk-8", name: "Biriyani Masala", unit: "kg", qty: 6, reorderLevel: 4, costPerUnit: 480 },
+  { id: "slb-stk-9", name: "Curd", unit: "kg", qty: 12, reorderLevel: 8, costPerUnit: 60 },
+  { id: "slb-stk-10", name: "Packing Box (Full)", unit: "pcs", qty: 400, reorderLevel: 200, costPerUnit: 9 },
+  { id: "slb-stk-11", name: "Carry Bag", unit: "pcs", qty: 700, reorderLevel: 300, costPerUnit: 3 },
+  { id: "slb-stk-12", name: "LPG Cylinder", unit: "pcs", qty: 3, reorderLevel: 2, costPerUnit: 1850 },
 ];
 
 export const DEFAULT_TENANTS: TenantConfig[] = [
@@ -1399,6 +1394,13 @@ export function getDB(): DB {
     if (!spotlightT.items || spotlightT.items.length === 0 || !spotlightT.items.some((i) => i.name.toLowerCase().includes("beef biriyani"))) {
       spotlightT.items = SPOTLIGHT_DEFAULT_ITEMS.map((i) => ({ ...i }));
       needsPersist = true;
+    } else {
+      // Clean up mutton if present from legacy seed
+      const withoutMutton = spotlightT.items.filter((i) => !i.name.toLowerCase().includes("mutton"));
+      if (withoutMutton.length !== spotlightT.items.length) {
+        spotlightT.items = withoutMutton;
+        needsPersist = true;
+      }
     }
   }
 

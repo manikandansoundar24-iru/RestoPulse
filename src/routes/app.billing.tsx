@@ -613,7 +613,9 @@ function Billing() {
     });
   }, [db, lines, channel, discount, payment, activeTenant]);
 
-  const [orderType, setOrderType] = useState<"dinein" | "takeaway">("dinein");
+  const [orderType, setOrderType] = useState<"dinein" | "takeaway">(() => {
+    return activeTenant?.id?.includes("spotlight") ? "takeaway" : "dinein";
+  });
 
   // VIP Customer Loyalty Lookup (triggers on 10-digit phone number)
   const customerLoyalty = useMemo(() => {
@@ -1143,7 +1145,7 @@ function Billing() {
       `✨ *${businessName}* ✨`,
       `📍 ${address}`,
       `📞 Order / Counter: ${phone}`,
-      isSpotlight ? `⭐ 4.0 ★ Google Rating (Kalikundram, Taramani)` : null,
+      isSpotlight ? `⭐ 4.9 ★ Google Rating · 214 Reviews (Kalikundram, Taramani)` : null,
       `─────────────────────────`,
       `🧾 *DIGITAL TAX INVOICE & RECEIPT*`,
       tokenNum ? `🎫 *Token: #${tokenNum}*` : null,
