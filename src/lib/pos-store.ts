@@ -381,19 +381,54 @@ export const MANAM_DEFAULT_STOCK: StockItem[] = [
   { id: "mnm-stk-12", name: "Eco Packing Box & Covers", unit: "pcs", qty: 450, reorderLevel: 200, costPerUnit: 8 },
 ];
 
+export const SPOTLIGHT_DEFAULT_ITEMS: Item[] = [
+  // --- BIRIYANI VARIETIES (Authentic Chennai Dum Deg) ---
+  { id: "slb-bir-1", name: "Chicken Biriyani (Full)", category: "biryani", price: 180, onlinePrice: 229, cost: 96, active: true },
+  { id: "slb-bir-2", name: "Chicken Biriyani (Half)", category: "biryani", price: 110, onlinePrice: 149, cost: 58, active: true },
+  { id: "slb-bir-3", name: "Beef Biriyani (Full)", category: "biryani", price: 180, onlinePrice: 229, cost: 85, active: true },
+  { id: "slb-bir-4", name: "Beef Biriyani (Half)", category: "biryani", price: 120, onlinePrice: 155, cost: 55, active: true },
+  { id: "slb-bir-5", name: "Chicken 65 Biriyani", category: "biryani", price: 210, onlinePrice: 259, cost: 118, active: true },
+  { id: "slb-bir-6", name: "Mutton Biriyani (Full)", category: "biryani", price: 280, onlinePrice: 349, cost: 172, active: true },
+  { id: "slb-bir-7", name: "Mutton Biriyani (Half)", category: "biryani", price: 170, onlinePrice: 219, cost: 104, active: true },
+  { id: "slb-bir-8", name: "Egg Biriyani", category: "biryani", price: 120, onlinePrice: 159, cost: 54, active: true },
+  { id: "slb-bir-9", name: "Kushka (Plain)", category: "kushka", price: 90, onlinePrice: 119, cost: 34, active: true },
+  { id: "slb-bir-10", name: "Kushka with Gravy", category: "kushka", price: 110, onlinePrice: 145, cost: 46, active: true },
+
+  // --- STARTERS & NON-VEG SPECIALS ---
+  { id: "slb-str-1", name: "Chicken 65", category: "starter", price: 150, onlinePrice: 189, cost: 82, active: true },
+  { id: "slb-str-2", name: "Beef Fry / Chukka", category: "starter", price: 160, onlinePrice: 209, cost: 70, active: true },
+  { id: "slb-str-3", name: "Pepper Chicken", category: "starter", price: 160, onlinePrice: 199, cost: 88, active: true },
+  { id: "slb-str-4", name: "Chicken Kebab", category: "starter", price: 170, onlinePrice: 209, cost: 95, active: true },
+  { id: "slb-str-5", name: "Chicken Gravy", category: "starter", price: 70, onlinePrice: 99, cost: 31, active: true },
+
+  // --- CHINESE / RICE ---
+  { id: "slb-chn-1", name: "Beef Fried Rice", category: "chinese", price: 150, onlinePrice: 195, cost: 60, active: true },
+  { id: "slb-chn-2", name: "Chicken Fried Rice", category: "chinese", price: 160, onlinePrice: 205, cost: 68, active: true },
+  { id: "slb-chn-3", name: "Egg Fried Rice", category: "chinese", price: 130, onlinePrice: 165, cost: 48, active: true },
+
+  // --- BREADS & PAROTTA ---
+  { id: "slb-brd-1", name: "Parotta (1 Pc)", category: "parotta", price: 15, onlinePrice: 25, cost: 7, active: true },
+
+  // --- DESSERTS & BEVERAGES ---
+  { id: "slb-des-1", name: "Bread Halwa", category: "dessert", price: 60, onlinePrice: 89, cost: 22, active: true },
+  { id: "slb-des-2", name: "Faluda", category: "dessert", price: 90, onlinePrice: 119, cost: 38, active: true },
+  { id: "slb-bev-1", name: "Fresh Lemon Soda", category: "beverage", price: 30, onlinePrice: 49, cost: 9, active: true },
+];
+
 export const SPOTLIGHT_DEFAULT_STOCK: StockItem[] = [
   { id: "slb-stk-1", name: "Basmati Rice", unit: "kg", qty: 120, reorderLevel: 40, costPerUnit: 92 },
   { id: "slb-stk-2", name: "Chicken", unit: "kg", qty: 45, reorderLevel: 25, costPerUnit: 210 },
-  { id: "slb-stk-3", name: "Mutton", unit: "kg", qty: 18, reorderLevel: 15, costPerUnit: 780 },
-  { id: "slb-stk-4", name: "Onion", unit: "kg", qty: 60, reorderLevel: 25, costPerUnit: 38 },
-  { id: "slb-stk-5", name: "Tomato", unit: "kg", qty: 30, reorderLevel: 15, costPerUnit: 32 },
-  { id: "slb-stk-6", name: "Refined Oil", unit: "L", qty: 35, reorderLevel: 20, costPerUnit: 128 },
-  { id: "slb-stk-7", name: "Ghee", unit: "L", qty: 8, reorderLevel: 6, costPerUnit: 620 },
-  { id: "slb-stk-8", name: "Biriyani Masala", unit: "kg", qty: 6, reorderLevel: 4, costPerUnit: 480 },
-  { id: "slb-stk-9", name: "Curd", unit: "kg", qty: 12, reorderLevel: 8, costPerUnit: 60 },
-  { id: "slb-stk-10", name: "Packing Box (Full)", unit: "pcs", qty: 400, reorderLevel: 200, costPerUnit: 9 },
-  { id: "slb-stk-11", name: "Carry Bag", unit: "pcs", qty: 700, reorderLevel: 300, costPerUnit: 3 },
-  { id: "slb-stk-12", name: "LPG Cylinder", unit: "pcs", qty: 3, reorderLevel: 2, costPerUnit: 1850 },
+  { id: "slb-stk-3", name: "Fresh Tender Beef", unit: "kg", qty: 35, reorderLevel: 20, costPerUnit: 340 },
+  { id: "slb-stk-4", name: "Mutton", unit: "kg", qty: 18, reorderLevel: 15, costPerUnit: 780 },
+  { id: "slb-stk-5", name: "Onion", unit: "kg", qty: 60, reorderLevel: 25, costPerUnit: 38 },
+  { id: "slb-stk-6", name: "Tomato", unit: "kg", qty: 30, reorderLevel: 15, costPerUnit: 32 },
+  { id: "slb-stk-7", name: "Refined Oil", unit: "L", qty: 35, reorderLevel: 20, costPerUnit: 128 },
+  { id: "slb-stk-8", name: "Ghee", unit: "L", qty: 8, reorderLevel: 6, costPerUnit: 620 },
+  { id: "slb-stk-9", name: "Biriyani Masala", unit: "kg", qty: 6, reorderLevel: 4, costPerUnit: 480 },
+  { id: "slb-stk-10", name: "Curd", unit: "kg", qty: 12, reorderLevel: 8, costPerUnit: 60 },
+  { id: "slb-stk-11", name: "Packing Box (Full)", unit: "pcs", qty: 400, reorderLevel: 200, costPerUnit: 9 },
+  { id: "slb-stk-12", name: "Carry Bag", unit: "pcs", qty: 700, reorderLevel: 300, costPerUnit: 3 },
+  { id: "slb-stk-13", name: "LPG Cylinder", unit: "pcs", qty: 3, reorderLevel: 2, costPerUnit: 1850 },
 ];
 
 export const DEFAULT_TENANTS: TenantConfig[] = [
@@ -458,8 +493,8 @@ export const DEFAULT_TENANTS: TenantConfig[] = [
     businessName: "Spot Light Biriyani",
     tagline: "Authentic Chennai Dum Biriyani & Starters",
     activeBranchName: "Taramani (Flagship)",
-    phone: "+91 98844 30710",
-    address: "10, Kaikankuppam, Kazhikundram, Taramani, Chennai - 600113",
+    phone: "+91 70922 21808",
+    address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
     gstin: "33AAAAA0000A1Z5",
     fssai: "12424008000456",
     upiId: "spotlightbiriyani@oksbi",
@@ -471,13 +506,18 @@ export const DEFAULT_TENANTS: TenantConfig[] = [
     loginPassword: "spotlight2026",
     cashierPin: "1234",
     kitchenPin: "5555",
+    items: SPOTLIGHT_DEFAULT_ITEMS,
     stock: SPOTLIGHT_DEFAULT_STOCK,
     branches: [
       {
         id: "taramani",
         name: "Taramani (Flagship)",
-        address: "No 6/31, Kazhikundram, Tharamani, Chennai 600113",
-        phone: "+91 98844 30710",
+        address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
+        phone: "+91 70922 21808",
+      },
+      { id: "adyar", name: "Adyar", address: "Lattice Bridge Road, Adyar, Chennai", phone: "+91 98844 30710" },
+      { id: "velachery", name: "Velachery", address: "100 Feet Road, Velachery, Chennai", phone: "+91 98844 30710" },
+    ],
       },
       { id: "adyar", name: "Adyar", address: "Lattice Bridge Road, Adyar, Chennai", phone: "+91 90000 00002" },
       { id: "velachery", name: "Velachery", address: "100 Feet Road, Velachery, Chennai", phone: "+91 90000 00003" },
@@ -748,6 +788,7 @@ export function getLiveBatchStatus(db: DB, branchId?: string, tenantId?: string)
   const hour = new Date().getHours();
   
   let chickenSold = 0;
+  let beefSold = 0;
   let muttonSold = 0;
   let kushkaSold = 0;
   let eggSold = 0;
@@ -778,6 +819,8 @@ export function getLiveBatchStatus(db: DB, branchId?: string, tenantId?: string)
         if (isBiryaniOrKushka) {
           if (n.includes("chicken")) {
             chickenSold += qty;
+          } else if (n.includes("beef")) {
+            beefSold += qty;
           } else if (n.includes("mutton")) {
             muttonSold += qty;
           } else if (n.includes("kushka")) {
@@ -798,34 +841,35 @@ export function getLiveBatchStatus(db: DB, branchId?: string, tenantId?: string)
   // Configurable or proportional capacity estimates for deg items
   const customSplit =
     db.settings?.batchSplit?.[currentBranchId] || db.settings?.batchSplit?.[currentTenantId];
-  let chickenCap = customSplit?.chickenCap ?? Math.round(cap * 0.65);
-  let muttonCap = customSplit?.muttonCap ?? (cap - chickenCap);
+  let chickenCap = customSplit?.chickenCap ?? Math.round(cap * 0.50);
+  let beefCap = (customSplit as any)?.beefCap ?? Math.round(cap * 0.30);
+  let muttonCap = customSplit?.muttonCap ?? Math.max(0, cap - chickenCap - beefCap);
 
   // If actual sales for an item exceeded initial estimate, dynamically adapt capacity
+  if (beefSold > beefCap) {
+    beefCap = beefSold;
+  }
+  if (chickenSold > chickenCap) {
+    chickenCap = chickenSold;
+  }
   if (muttonSold > muttonCap) {
     muttonCap = muttonSold;
-    chickenCap = Math.max(chickenSold, cap - muttonCap);
-  } else if (chickenSold > chickenCap) {
-    chickenCap = chickenSold;
-    muttonCap = Math.max(muttonSold, cap - chickenCap);
   }
 
   // Raw remaining per item
   let chickenLeft = Math.max(0, chickenCap - chickenSold);
+  let beefLeft = Math.max(0, beefCap - beefSold);
   let muttonLeft = Math.max(0, muttonCap - muttonSold);
 
   // Strict reconciliation: Item remaining counts can NEVER exceed total remaining plates
   if (platesLeft <= 0) {
     chickenLeft = 0;
+    beefLeft = 0;
     muttonLeft = 0;
   } else {
-    // Bound chicken and mutton by total plates remaining in the kitchen
     chickenLeft = Math.min(platesLeft, chickenLeft);
-    muttonLeft = Math.min(platesLeft - chickenLeft, muttonLeft);
-    // If mutton was not sold out but chicken didn't take all remaining plates:
-    if (muttonSold < muttonCap && chickenLeft + muttonLeft < platesLeft) {
-      muttonLeft = platesLeft - chickenLeft;
-    }
+    beefLeft = Math.min(platesLeft - chickenLeft, beefLeft);
+    muttonLeft = Math.min(Math.max(0, platesLeft - chickenLeft - beefLeft), muttonLeft);
   }
 
   const kushkaCap = Math.round(chickenCap * 0.2);
@@ -843,13 +887,16 @@ export function getLiveBatchStatus(db: DB, branchId?: string, tenantId?: string)
       isSoldOut: platesLeft <= 0,
       breakdown: {
         chickenSold,
+        beefSold,
         muttonSold,
         kushkaSold,
         eggSold,
         chickenCap,
+        beefCap,
         muttonCap,
         kushkaCap,
         chickenLeft,
+        beefLeft,
         muttonLeft,
         kushkaLeft,
       },
@@ -864,13 +911,16 @@ export function getLiveBatchStatus(db: DB, branchId?: string, tenantId?: string)
     isSoldOut: platesLeft <= 0,
     breakdown: {
       chickenSold,
+      beefSold,
       muttonSold,
       kushkaSold,
       eggSold,
       chickenCap,
+      beefCap,
       muttonCap,
       kushkaCap,
       chickenLeft,
+      beefLeft,
       muttonLeft,
       kushkaLeft,
     },
@@ -881,40 +931,15 @@ function seed(): DB {
   const branches: Branch[] = [
     {
       id: "taramani",
-      name: "Taramani",
-      address: "No 6/31, Kazhikundram, Tharamani, Chennai 600113",
-      phone: "+91 98844 30710",
+      name: "Taramani (Flagship)",
+      address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
+      phone: "+91 70922 21808",
     },
-    { id: "adyar", name: "Adyar", address: "Lattice Bridge Road, Adyar, Chennai", phone: "+91 90000 00002" },
-    { id: "velachery", name: "Velachery", address: "100 Feet Road, Velachery, Chennai", phone: "+91 90000 00003" },
+    { id: "adyar", name: "Adyar", address: "Lattice Bridge Road, Adyar, Chennai", phone: "+91 98844 30710" },
+    { id: "velachery", name: "Velachery", address: "100 Feet Road, Velachery, Chennai", phone: "+91 98844 30710" },
   ];
 
-  const mk = (
-    name: string,
-    category: Category,
-    price: number,
-    onlinePrice: number,
-    cost: number,
-  ): Item => ({ id: id(), name, category, price, onlinePrice, cost, active: true });
-
-  const items: Item[] = [
-    mk("Chicken Biriyani (Full)", "biryani", 180, 229, 96),
-    mk("Chicken Biriyani (Half)", "biryani", 110, 149, 58),
-    mk("Mutton Biriyani (Full)", "biryani", 280, 349, 172),
-    mk("Mutton Biriyani (Half)", "biryani", 170, 219, 104),
-    mk("Egg Biriyani", "biryani", 120, 159, 54),
-    mk("Chicken 65 Biriyani", "biryani", 210, 259, 118),
-    mk("Kushka (Plain)", "kushka", 90, 119, 34),
-    mk("Kushka with Gravy", "kushka", 110, 145, 46),
-    mk("Chicken 65", "starter", 150, 189, 82),
-    mk("Pepper Chicken", "starter", 160, 199, 88),
-    mk("Chicken Kebab", "starter", 170, 209, 95),
-    mk("Parotta", "bread", 15, 25, 7),
-    mk("Chicken Gravy", "starter", 70, 99, 31),
-    mk("Bread Halwa", "dessert", 60, 89, 22),
-    mk("Faluda", "dessert", 90, 119, 38),
-    mk("Lemon Soda", "beverage", 30, 49, 9),
-  ];
+  const items: Item[] = SPOTLIGHT_DEFAULT_ITEMS.map((i) => ({ ...i }));
 
   const stock: StockItem[] = [
     { id: id(), name: "Basmati Rice", unit: "kg", qty: 120, reorderLevel: 40, costPerUnit: 92 },
@@ -1357,6 +1382,42 @@ export function getDB(): DB {
       cache.items = cleaned;
       needsPersist = true;
     }
+  }
+
+  // Ensure Spotlight Biriyani tenant details reflect real Google Maps shop info
+  const spotlightT = cache.tenants?.find((t) => t.id === "spotlight-biriyani");
+  if (spotlightT) {
+    if (spotlightT.phone !== "+91 70922 21808" || !spotlightT.address.includes("No. 14, Kalikundram")) {
+      spotlightT.phone = "+91 70922 21808";
+      spotlightT.address = "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113";
+      if (spotlightT.branches && spotlightT.branches.length > 0) {
+        spotlightT.branches[0].phone = "+91 70922 21808";
+        spotlightT.branches[0].address = "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113";
+      }
+      needsPersist = true;
+    }
+    if (!spotlightT.items || spotlightT.items.length === 0 || !spotlightT.items.some((i) => i.name.toLowerCase().includes("beef biriyani"))) {
+      spotlightT.items = SPOTLIGHT_DEFAULT_ITEMS.map((i) => ({ ...i }));
+      needsPersist = true;
+    }
+  }
+
+  // Ensure global cache.items has Spotlight beef specialties
+  if (Array.isArray(cache.items) && !cache.items.some((i) => i.name.toLowerCase().includes("beef biriyani"))) {
+    const beefItems: Item[] = [
+      { id: "slb-bir-3", name: "Beef Biriyani (Full)", category: "biryani", price: 180, onlinePrice: 229, cost: 85, active: true },
+      { id: "slb-bir-4", name: "Beef Biriyani (Half)", category: "biryani", price: 120, onlinePrice: 155, cost: 55, active: true },
+      { id: "slb-str-2", name: "Beef Fry / Chukka", category: "starter", price: 160, onlinePrice: 209, cost: 70, active: true },
+      { id: "slb-chn-1", name: "Beef Fried Rice", category: "chinese", price: 150, onlinePrice: 195, cost: 60, active: true },
+    ];
+    cache.items.unshift(...beefItems);
+    needsPersist = true;
+  }
+
+  // Ensure stock has beef
+  if (Array.isArray(cache.stock) && !cache.stock.some((s) => s.name.toLowerCase().includes("beef"))) {
+    cache.stock.push({ id: "slb-stk-3", name: "Fresh Tender Beef", unit: "kg", qty: 35, reorderLevel: 20, costPerUnit: 340 });
+    needsPersist = true;
   }
 
   // Ensure Manam demo sales are present so Manam Restaurant dashboard and reports are rich

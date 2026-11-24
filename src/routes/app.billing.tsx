@@ -341,6 +341,10 @@ function DishCard({
       const left = bd?.chickenLeft ?? liveBatch.platesLeft;
       return left > 0 ? `${left} Chicken in Deg` : "Sold Out";
     }
+    if (n.includes("beef")) {
+      const left = (bd as any)?.beefLeft ?? liveBatch.platesLeft;
+      return left > 0 ? `${left} Beef in Deg` : "Sold Out";
+    }
     if (n.includes("mutton")) {
       const left = bd?.muttonLeft ?? 0;
       return left > 0 ? `${left} Mutton in Deg` : "Sold Out";
@@ -1108,8 +1112,82 @@ function Billing() {
     }
   };
 
+  const getDishEmoji = (name: string): string => {
+    const n = (name || "").toLowerCase();
+    if (n.includes("beef")) return "🥩";
+    if (n.includes("mutton")) return "🍖";
+    if (n.includes("chicken") || n.includes("65") || n.includes("kebab") || n.includes("lollipop") || n.includes("wing")) return "🍗";
+    if (n.includes("egg")) return "🥚";
+    if (n.includes("biriyani") || n.includes("biryani") || n.includes("briyani") || n.includes("kushka") || n.includes("rice")) return "🍚";
+    if (n.includes("parotta") || n.includes("roti") || n.includes("chapathi") || n.includes("naan") || n.includes("bread")) return "🫓";
+    if (n.includes("noodles")) return "🍜";
+    if (n.includes("halwa") || n.includes("faluda") || n.includes("dessert") || n.includes("ice cream")) return "🍨";
+    if (n.includes("soda") || n.includes("juice") || n.includes("water") || n.includes("tea") || n.includes("coffee") || n.includes("beverage")) return "🥤";
+    if (n.includes("gravy") || n.includes("salna") || n.includes("curry") || n.includes("dalcha")) return "🥘";
+    return "🍽️";
+  };
+
+  const buildWhatsAppReceiptMsg = (sale: Sale, custName?: string, tokenNum?: number | string) => {
+    const isSpotlight = (activeTenant.businessName || "").toLowerCase().includes("spotlight") || (activeTenant.businessName || "").toLowerCase().includes("spot light");
+    const businessName = isSpotlight ? "SPOT LIGHT BIRIYANI" : (activeTenant.businessName || db?.settings?.businessName || "Restaurant").toUpperCase();
+    const branch = activeTenant.branches?.find((b) => b.id === sale.branchId) || activeTenant.branches?.[0] || db?.branches[0];
+    const address = branch?.address || activeTenant.address || "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113";
+    const phone = branch?.phone || activeTenant.phone || "+91 70922 21808";
+    const orderTypeStr = sale.orderType === "takeaway" ? "Takeaway / Parcel 🥡" : (sale.tableId ? `Dine-In (Table ${sale.tableId}) 🍽️` : "Dine-In 🍽️");
+    const billRef = sale.id.slice(0, 6).toUpperCase();
+    const dateStr = new Date(sale.date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+
+    const itemsLines = sale.lines.map((l) => `${getDishEmoji(l.name)} ${l.qty}x ${l.name} - ₹${l.price * l.qty}`).join("\n");
+
+    return [
+      `✨ *${businessName}* ✨`,
+      `📍 ${address}`,
+      `📞 Order / Counter: ${phone}`,
+      isSpotlight ? `⭐ 4.0 ★ Google Rating (Kalikundram, Taramani)` : null,
+      `─────────────────────────`,
+      `🧾 *DIGITAL TAX INVOICE & RECEIPT*`,
+      tokenNum ? `🎫 *Token: #${tokenNum}*` : null,
+      `📋 *Bill No: #${billRef}*`,
+      custName ? `👤 Customer: *${custName}*` : null,
+      `📅 Date: ${dateStr}`,
+      `🛎️ Service: *${orderTypeStr}*`,
+      `─────────────────────────`,
+      `🍽️ *ORDER ITEMS:*`,
+      itemsLines,
+      `─────────────────────────`,
+      sale.discount ? `🏷️ Discount: -₹${sale.discount}` : null,
+      `💰 *NET TOTAL: ₹${sale.net}*`,
+      `💳 Payment: *${sale.payment.toUpperCase()} (PAID)*`,
+      `─────────────────────────`,
+      isSpotlight ? `🙏 *Thank you for dining with Spot Light Biriyani!*\n🔥 Cooked fresh daily in traditional firewood degs.\n✨ Visit again!` : `🙏 Thank you for dining with ${activeTenant.businessName || "us"}!\n✨ Visit again!`
+    ].filter(Boolean).join("\n");
+  };
+
+  const openWhatsAppSafely = (phone10Digits: string, message: string) => {
+    const waUrl = `https://api.whatsapp.com/send?phone=91${phone10Digits}&text=${encodeURIComponent(message)}`;
+    const popup = window.open(waUrl, "_blank", "noopener,noreferrer");
+    if (!popup) {
+      navigator.clipboard.writeText(message);
+      toast.info("WhatsApp popup was blocked. Message copied to clipboard! Click to open.", {
+        action: {
+          label: "Open WhatsApp",
+          onClick: () => window.open(waUrl, "_blank", "noopener,noreferrer"),
+        },
+        duration: 8000,
+      });
+    } else {
+      toast.success(`WhatsApp receipt opened in a new tab for +91 ${phone10Digits}!`);
+    }
+  };
+
   const triggerWhatsAppForBill = (sale: Sale) => {
     setWhatsappTargetBill(sale);
+    if (sale.customerPhone) {
+      setCustomerPhone(sale.customerPhone);
+    }
+    if (sale.customerName) {
+      setCustomerName(sale.customerName);
+    }
     setWhatsappModalOpen(true);
   };
 
@@ -1267,40 +1345,8 @@ function Billing() {
     const target = saveOrUpdate();
     if (!target) return;
 
-    const businessName = activeTenant.businessName || db?.settings?.businessName || "Restaurant";
-    const branch = activeTenant.branches?.find((b) => b.id === target.branchId) || activeTenant.branches?.[0] || db?.branches[0];
-    const itemsText = target.lines.map((l) => `• ${l.qty}x ${l.name} - Rs. ${l.price * l.qty}`).join("\n");
-    const orderTypeStr = target.orderType === "takeaway" ? "TAKEAWAY / PARCEL" : (target.tableId ? `DINE-IN (${target.tableId})` : "DINE-IN");
-
-    const msg = [
-      `Hi Customer, your ${businessName} bill is confirmed!`,
-      `----------------------------------------`,
-      `*${businessName}* - ${branch?.name || "Kitchen"}`,
-      `Date: ${new Date(target.date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}`,
-      `Order Type: *${orderTypeStr}*`,
-      `Bill Ref: *#${target.id.slice(0, 6).toUpperCase()}*`,
-      `----------------------------------------`,
-      `*ORDER ITEMS:*`,
-      itemsText,
-      `----------------------------------------`,
-      `*NET TOTAL: Rs. ${target.net}*`,
-      `Payment Method: ${target.payment.toUpperCase()}`,
-      `----------------------------------------`,
-      `Store Address: ${branch?.address || "Chennai"}`,
-      branch?.phone ? `Contact: ${branch.phone}` : "",
-      `Thank you for dining with ${businessName}! Visit again.`
-    ].filter(Boolean).join("\n");
-
-    const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const whatsappUrl = isMobile
-      ? `https://wa.me/91${validPhone}?text=${encodeURIComponent(msg)}`
-      : `https://web.whatsapp.com/send?phone=91${validPhone}&text=${encodeURIComponent(msg)}`;
-
-    const w = window.open(whatsappUrl, "_blank");
-    if (!w || w.closed || typeof w.closed === "undefined") {
-      window.location.href = whatsappUrl;
-    }
-    toast.success(`WhatsApp receipt launched for +91 ${validPhone}!`);
+    const msg = buildWhatsAppReceiptMsg(target, customerName.trim() || undefined, todayToken - 1);
+    openWhatsAppSafely(validPhone, msg);
     setQuickPhone("");
   };
 
@@ -2645,47 +2691,8 @@ function Billing() {
                       Message Preview (WhatsApp Card)
                     </label>
                     <div className="rounded-xl border border-border bg-[#efeae2] dark:bg-[#111b21] p-3 text-[11px] text-slate-800 dark:text-slate-100 font-sans shadow-inner">
-                      <div className="rounded-lg bg-white dark:bg-[#202c33] p-3 shadow-xs border border-slate-200 dark:border-slate-700 space-y-1.5 leading-relaxed">
-                        <p className="font-medium">
-                          Hi <span className="font-bold text-emerald-600 dark:text-emerald-400">{customerName || "Customer"}</span>, your {activeTenant.businessName} bill is confirmed!
-                        </p>
-                        <p className="font-bold text-slate-900 dark:text-white">
-                          {activeTenant.businessName} - {branch?.name || "Kitchen"}
-                        </p>
-                        <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-[10px]">
-                          <span>{new Date(activeBill.date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
-                          <span className="font-bold uppercase text-primary">
-                            {activeBill.orderType === "takeaway" ? "Takeaway / Parcel" : (activeBill.tableId ? `Dine-in (${activeBill.tableId})` : "Dine-in")}
-                          </span>
-                        </div>
-                        <div className="border-t border-slate-200 dark:border-slate-700 pt-1 text-[11px] space-y-0.5">
-                          {activeBill.lines.map((l) => (
-                            <div key={l.itemId} className="flex justify-between">
-                              <span>• {l.qty}x {l.name}</span>
-                              <span className="font-mono">Rs. {l.price * l.qty}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="border-t border-slate-200 dark:border-slate-700 pt-1 font-bold text-xs flex justify-between text-slate-900 dark:text-white">
-                          <span>Total: Rs. {activeBill.net}</span>
-                          <span className="uppercase text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                            Paid via {activeBill.payment}
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-slate-500">
-                          {branch?.address || "Chennai"}
-                        </p>
-                        {branch?.phone && (
-                          <p className="text-[10px] text-slate-500">
-                            {branch.phone}
-                          </p>
-                        )}
-                        <p className="text-[10px] font-semibold text-slate-700 dark:text-slate-300">
-                          Bill Ref: <span className="font-mono text-emerald-600 dark:text-emerald-400">#{activeBill.id.slice(0, 6).toUpperCase()}</span>
-                        </p>
-                        <p className="text-[10px] italic text-slate-500">
-                          Thank you for dining with {activeTenant.businessName}! Visit again.
-                        </p>
+                      <div className="rounded-lg bg-white dark:bg-[#202c33] p-3 shadow-xs border border-slate-200 dark:border-slate-700 space-y-1.5 leading-relaxed whitespace-pre-line font-mono text-[11px]">
+                        {buildWhatsAppReceiptMsg(activeBill, customerName.trim() || undefined, todayToken - 1)}
                       </div>
                     </div>
                   </div>
@@ -2695,28 +2702,7 @@ function Billing() {
                     <button
                       type="button"
                       onClick={() => {
-                        const businessName = activeTenant.businessName || db?.settings?.businessName || "Restaurant";
-                        const branch = activeTenant.branches?.find((b) => b.id === activeBill.branchId) || activeTenant.branches?.[0] || db?.branches[0];
-                        const itemsText = activeBill.lines.map((l) => `• ${l.qty}x ${l.name} - Rs. ${l.price * l.qty}`).join("\n");
-                        const orderTypeStr = activeBill.orderType === "takeaway" ? "TAKEAWAY / PARCEL" : (activeBill.tableId ? `DINE-IN (${activeBill.tableId})` : "DINE-IN");
-                        const msg = [
-                          `Hi ${customerName || "Customer"}, your ${businessName} bill is confirmed!`,
-                          `----------------------------------------`,
-                          `*${businessName}* - ${branch?.name || "Kitchen"}`,
-                          `Date: ${new Date(activeBill.date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}`,
-                          `Order Type: *${orderTypeStr}*`,
-                          `Bill Ref: *#${activeBill.id.slice(0, 6).toUpperCase()}*`,
-                          `----------------------------------------`,
-                          `*ORDER ITEMS:*`,
-                          itemsText,
-                          `----------------------------------------`,
-                          `*NET TOTAL: Rs. ${activeBill.net}*`,
-                          `Payment Method: ${activeBill.payment.toUpperCase()}`,
-                          `----------------------------------------`,
-                          `Store Address: ${branch?.address || "Chennai"}`,
-                          branch?.phone ? `Contact: ${branch.phone}` : "",
-                          `Thank you for dining with ${businessName}! Visit again.`
-                        ].filter(Boolean).join("\n");
+                        const msg = buildWhatsAppReceiptMsg(activeBill, customerName.trim() || undefined, todayToken - 1);
                         navigator.clipboard.writeText(msg);
                         toast.success("WhatsApp bill copied to clipboard!");
                       }}
@@ -2734,35 +2720,8 @@ function Billing() {
                           return;
                         }
                         const validPhone = cleanPhone.slice(-10);
-                        const businessName = activeTenant.businessName || db?.settings?.businessName || "Restaurant";
-                        const branch = activeTenant.branches?.find((b) => b.id === activeBill.branchId) || activeTenant.branches?.[0] || db?.branches[0];
-                        const itemsText = activeBill.lines.map((l) => `• ${l.qty}x ${l.name} - Rs. ${l.price * l.qty}`).join("\n");
-                        const orderTypeStr = activeBill.orderType === "takeaway" ? "TAKEAWAY / PARCEL" : (activeBill.tableId ? `DINE-IN (${activeBill.tableId})` : "DINE-IN");
-                        const msg = [
-                          `Hi ${customerName || "Customer"}, your ${businessName} bill is confirmed!`,
-                          `----------------------------------------`,
-                          `*${businessName}* - ${branch?.name || "Kitchen"}`,
-                          `Date: ${new Date(activeBill.date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}`,
-                          `Order Type: *${orderTypeStr}*`,
-                          `Bill Ref: *#${activeBill.id.slice(0, 6).toUpperCase()}*`,
-                          `----------------------------------------`,
-                          `*ORDER ITEMS:*`,
-                          itemsText,
-                          `----------------------------------------`,
-                          `*NET TOTAL: Rs. ${activeBill.net}*`,
-                          `Payment Method: ${activeBill.payment.toUpperCase()}`,
-                          `----------------------------------------`,
-                          `Store Address: ${branch?.address || "Chennai"}`,
-                          branch?.phone ? `Contact: ${branch.phone}` : "",
-                          `Thank you for dining with ${businessName}! Visit again.`
-                        ].filter(Boolean).join("\n");
-
-                        const whatsappUrl = `https://wa.me/91${validPhone}?text=${encodeURIComponent(msg)}`;
-                        const w = window.open(whatsappUrl, "_blank");
-                        if (!w || w.closed || typeof w.closed === "undefined") {
-                          window.location.href = whatsappUrl;
-                        }
-                        toast.success("WhatsApp opened with formatted bill!");
+                        const msg = buildWhatsAppReceiptMsg(activeBill, customerName.trim() || undefined, todayToken - 1);
+                        openWhatsAppSafely(validPhone, msg);
                         setWhatsappModalOpen(false);
                         setWhatsappTargetBill(null);
                       }}

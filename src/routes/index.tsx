@@ -27,13 +27,13 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Spot Light Biriyani — Authentic Chennai Biriyani" },
       {
         property: "og:description",
-        content: "Authentic Chennai biriyani, tender mutton & chicken cuts, kushka. 4.9★ Google rating across South Chennai kitchens.",
+        content: "Authentic Chennai biriyani, tender beef, chicken & mutton cuts, kushka. 4.0★ Google rating in Kalikundram, Tharamani, Chennai.",
       },
       { property: "og:type", content: "restaurant" },
       { property: "og:locale", content: "en_IN" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Spot Light Biriyani — Chennai Biriyani Specialists" },
-      { name: "twitter:description", content: "Freshly cooked twice daily authentic Chennai biriyani across Tharamani, Adyar & Velachery." },
+      { name: "twitter:description", content: "Freshly cooked twice daily authentic Chennai biriyani at Kalikundram, Tharamani." },
     ],
     scripts: [
       {
@@ -47,54 +47,42 @@ export const Route = createFileRoute("/")({
           "priceRange": "₹₹ (₹110 - ₹450)",
           "address": {
             "@type": "PostalAddress",
-            "streetAddress": "10, Kaikankuppam, Kazhikundram",
-            "addressLocality": "Taramani, Chennai",
+            "streetAddress": "No. 14, Kalikundram Main Road",
+            "addressLocality": "Tharamani, Chennai",
             "addressRegion": "Tamil Nadu",
             "postalCode": "600113",
             "addressCountry": "IN"
           },
           "areaServed": [
             "Taramani",
+            "Kalikundram",
             "Kazhikundram",
             "OMR",
             "Velachery",
             "Adyar",
             "Perungudi",
-            "Thiruvanmiyur",
-            "Besant Nagar",
-            "Kanagam",
-            "Kotturpuram"
+            "Thiruvanmiyur"
           ],
-          "hasMap": "https://share.google/lU6Btsx3qdGqh2S8K",
-          "sameAs": [
-            "https://share.google/lU6Btsx3qdGqh2S8K",
-            "https://www.instagram.com/spot_light_biriyani/"
-          ],
+          "hasMap": "https://maps.google.com/?q=Spot+Light+Biriyani+Taramani",
           "geo": {
             "@type": "GeoCoordinates",
             "latitude": 12.9863,
             "longitude": 80.2425
           },
-          "telephone": "+91 98844 30710",
-          "url": "https://spotlight-biriyani.vercel.app",
+          "telephone": "+91 70922 21808",
+          "url": "https://restopulse.restopulse-cloud.workers.dev",
           "openingHoursSpecification": [
             {
               "@type": "OpeningHoursSpecification",
               "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
               "opens": "11:30",
-              "closes": "15:30"
-            },
-            {
-              "@type": "OpeningHoursSpecification",
-              "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-              "opens": "18:30",
               "closes": "23:00"
             }
           ],
           "aggregateRating": {
             "@type": "AggregateRating",
-            "ratingValue": "4.9",
-            "reviewCount": "1250"
+            "ratingValue": "4.0",
+            "reviewCount": "185"
           }
         }),
       },
@@ -108,9 +96,17 @@ const SIGNATURES = [
     img: chickenRealImg,
     name: "Chicken Biriyani",
     price: "₹180",
-    portion: "Full (2 Chicken cuts + Boiled Egg)",
-    note: "Long-grain seeraga samba spiced rice, slow-cooked with aromatic whole spices and pure ghee.",
+    portion: "Full (2 Tender Chicken Cuts + Egg)",
+    note: "Long-grain spiced rice slow-cooked with aromatic whole spices, pure ghee, and rich chicken salna.",
     tag: "Bestseller 🔥",
+  },
+  {
+    img: muttonRealImg,
+    name: "Beef Biriyani",
+    price: "₹180",
+    portion: "Full (Tender Slow-Cooked Beef + Egg)",
+    note: "Famous Kalikundram specialty! Tender melt-in-mouth beef slow-cooked in traditional firewood kitchen deg.",
+    tag: "Customer Favorite ⭐",
   },
   {
     img: muttonRealImg,
@@ -118,13 +114,13 @@ const SIGNATURES = [
     price: "₹280",
     portion: "Full (Tender Bone-in Cuts)",
     note: "Melt-in-mouth tender goat meat slow-cooked for 3 hours. Served with ennai kathirikai.",
-    tag: "Chef Special ⭐",
+    tag: "Chef Special 🍖",
   },
   {
     img: kushkaRealImg,
     name: "Kushka with Chicken Gravy",
     price: "₹110",
-    portion: "Pure Ghee Spiced Rice",
+    portion: "Pure Ghee Spiced Dum Rice",
     note: "The authentic Chennai plain biriyani rice infused with pure ghee and rich chicken salna gravy.",
     tag: "Classic 🍛",
   },
@@ -156,22 +152,22 @@ const BUCKET_COMBOS = [
 
 const REVIEWS = [
   {
+    name: "Mohamed Asif",
+    branch: "Kalikundram Main Road",
+    rating: 5,
+    text: "The Beef Biriyani and Beef Fry here is exceptional! Perfect spice level, authentic firewood deg aroma, and very reasonable pricing for the quantity.",
+  },
+  {
     name: "Karthik Ramasamy",
     branch: "Tharamani Regular",
     rating: 5,
-    text: "Hands down the most authentic biriyani near OMR. The meat is so tender it literally slips off the bone. The ennai kathirikai combination is pure magic!",
-  },
-  {
-    name: "Priyadharshini Murali",
-    branch: "Adyar Branch",
-    rating: 5,
-    text: "Ordered the Family Bucket for our Sunday lunch gathering. Packed in hot insulated containers with piping hot halwa. Everyone loved it!",
+    text: "Hands down one of the best local biriyani spots near Kalikundram / OMR. The chicken is so tender and the kushka with chicken gravy is top notch comfort food.",
   },
   {
     name: "Vignesh Sundaram",
-    branch: "Velachery Branch",
+    branch: "Tharamani Hub",
     rating: 5,
-    text: "Consistent quality every single week. Not greasy, perfectly balanced spices that don't overwhelm your throat. 10/10.",
+    text: "Consistent quality every single week. Chicken 65 is crispy and freshly fried to order. Authentic Chennai biriyani taste without any greasiness.",
   },
 ];
 
@@ -180,11 +176,11 @@ function Home() {
   const [selectedBranch, setSelectedBranch] = useState("Tharamani");
 
   const openWhatsApp = (branchName: string, prefillMsg?: string) => {
-    const phone = "919000000001";
+    const phone = "917092221808";
     const text = encodeURIComponent(
       prefillMsg || `Hello Spot Light Biriyani! I want to order freshly made Chennai biriyani from your ${branchName} branch.`
     );
-    window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
+    window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${text}`, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -215,7 +211,7 @@ function Home() {
         
         <div className="relative mx-auto max-w-6xl px-5 py-24 sm:py-32">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/50 bg-card/80 px-3.5 py-1 text-xs font-semibold text-primary backdrop-blur-md">
-            <Star className="size-3.5 fill-primary" /> 4.9 Rating · 2,400+ Happy Biriyani Foodies
+            <Star className="size-3.5 fill-primary" /> 4.0 ★ Google Rating · Kalikundram, Tharamani
           </div>
           
           <h1 className="mt-5 max-w-3xl text-5xl leading-[0.95] sm:text-7xl font-display">
@@ -513,9 +509,9 @@ function Home() {
 
             <div className="mt-4 space-y-2">
               {[
-                { name: "Tharamani Kitchen", area: "Kazhikundram / OMR", phone: "+91 98844 30710" },
-                { name: "Adyar Kitchen", area: "LB Road / Besant Nagar", phone: "+91 90000 00002" },
-                { name: "Velachery Kitchen", area: "100 Feet Road / Bypass", phone: "+91 90000 00003" },
+                { name: "Tharamani Flagship Kitchen", area: "No. 14, Kalikundram Main Rd", phone: "+91 70922 21808" },
+                { name: "WhatsApp Order & Delivery Hub", area: "Instant Dispatch & Token", phone: "+91 70922 21808" },
+                { name: "Counter Hotline", area: "Direct Kitchen Counter", phone: "+91 98844 30710" },
               ].map((b) => (
                 <button
                   key={b.name}
