@@ -8,8 +8,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getDB, setDB, DB, Sale, Item, sanitizeAndDeduplicateItems, getActiveTenant, TenantConfig, DEFAULT_TENANTS } from "./pos-store";
 
-const NEON_SQL_ENDPOINT = "https://ep-small-frog-aorujp14.c-2.ap-southeast-1.aws.neon.tech/sql";
-const NEON_CONN_STRING = "postgresql://neondb_owner:npg_7NjC6EYaLsgW@ep-small-frog-aorujp14.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
+const NEON_SQL_ENDPOINT = (typeof process !== "undefined" && process.env?.NEON_SQL_ENDPOINT)
+  ? process.env.NEON_SQL_ENDPOINT
+  : "https://ep-small-frog-aorujp14.c-2.ap-southeast-1.aws.neon.tech/sql";
+
+const getNeonConnString = () => {
+  if (typeof process !== "undefined" && process.env) {
+    return process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || "";
+  }
+  return "";
+};
 
 /**
  * Server-side SQL executor (Safe from browser CORS & keeps connection string secure)
@@ -17,10 +25,16 @@ const NEON_CONN_STRING = "postgresql://neondb_owner:npg_7NjC6EYaLsgW@ep-small-fr
 export const executeNeonQuery = createServerFn({ method: "POST" })
   .validator((d: { query: string }) => d)
   .handler(async ({ data }) => {
+    const connString = getNeonConnString();
+    if (!connString) {
+      console.warn("Neon Cloud Database URL is not configured in environment. Local-first offline mode active.");
+      return { rows: [] };
+    }
+
     const res = await fetch(NEON_SQL_ENDPOINT, {
       method: "POST",
       headers: {
-        "Neon-Connection-String": NEON_CONN_STRING,
+        "Neon-Connection-String": connString,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ query: data.query }),
@@ -78,7 +92,7 @@ export async function pullSalesFromCloud(): Promise<Sale[]> {
           FROM "Sale" s
           WHERE s."branchId" NOT IN ('adyar', 'velachery')
           ORDER BY s."date" DESC
-          LIMIT 500;
+          LIMIT 50;
         `,
       },
     });

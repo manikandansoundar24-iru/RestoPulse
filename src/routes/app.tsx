@@ -91,36 +91,16 @@ function AppLayout() {
     };
   }, []);
 
-  // Automatic background sync: throttled to 5 minutes + debounced tab focus to protect Vercel Origin Transfer
+  // Safe cloud sync: only triggers on manual click or network restoration, preventing quota exhaustion
   useEffect(() => {
-    performFullSync().catch(() => {});
-
-    // Periodic sync: 5 minutes (300,000 ms) instead of 45 seconds
-    const interval = setInterval(() => {
-      performFullSync().catch(() => {});
-    }, 300000);
-
-    // Debounce focus so switching tabs doesn't spam Vercel Origin Transfer (max once per 3 minutes)
-    let lastFocusSync = Date.now();
-    const onFocus = () => {
-      if (Date.now() - lastFocusSync > 180000) {
-        lastFocusSync = Date.now();
-        performFullSync().catch(() => {});
-      }
-    };
-    window.addEventListener("focus", onFocus);
-
     const onOnline = () => {
-      toast.info("Internet connection restored! Syncing with Neon Cloud...", {
+      toast.info("Internet connection restored!", {
         icon: <Database className="size-4 text-primary" />,
       });
-      performFullSync().catch(() => {});
     };
     window.addEventListener("online", onOnline);
 
     return () => {
-      clearInterval(interval);
-      window.removeEventListener("focus", onFocus);
       window.removeEventListener("online", onOnline);
     };
   }, []);
