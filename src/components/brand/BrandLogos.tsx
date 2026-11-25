@@ -16,65 +16,100 @@ const SIZE_MAP: Record<LogoSize, { box: string; iconSize: number; text: string }
 };
 
 /**
- * ⚡ RestoPulse Premium SaaS Emblem:
- * A high-tech enterprise restaurant icon fusing a modern culinary cloche dome
- * with an energetic dynamic ECG heartbeat pulse wave, symbolizing the real-time
- * operational heartbeat of the restaurant.
+ * ⚡ RestoPulse SaaS Platform Logo:
+ * A high-vibrancy, futuristic restaurant operating system emblem.
+ * Features a radiant fiery gradient squircle with a gleaming white & molten gold
+ * culinary cloche silhouette fused with an active real-time operational ECG pulse wave.
+ * High-contrast, razor-sharp, and visually stunning in both light and dark modes.
  */
 export function RestoPulseLogo({ size = "md", className = "" }: LogoProps) {
   const s = SIZE_MAP[size];
   return (
     <span
-      className={`relative inline-flex items-center justify-center shrink-0 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-600 to-rose-600 p-[1.5px] shadow-md shadow-orange-500/20 group-hover:scale-105 transition-all duration-300 ${s.box} ${className}`}
-      title="RestoPulse Cloud POS & Restaurant OS"
+      className={`relative inline-flex items-center justify-center shrink-0 rounded-xl bg-gradient-to-tr from-rose-600 via-orange-500 to-amber-300 p-[1.5px] shadow-lg shadow-orange-500/25 group-hover:scale-105 group-hover:shadow-orange-500/40 transition-all duration-300 ${s.box} ${className}`}
+      title="RestoPulse Cloud POS & Enterprise Restaurant OS"
     >
-      <span className="flex size-full items-center justify-center rounded-[14px] bg-slate-950/80 backdrop-blur-xs overflow-hidden">
+      <span className="flex size-full items-center justify-center rounded-[10px] bg-gradient-to-br from-amber-500 via-orange-600 to-rose-600 overflow-hidden relative shadow-inner">
+        {/* Luminous Glass Sheen Layer */}
+        <span className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/25 pointer-events-none" />
+
         <svg
           viewBox="0 0 36 36"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="size-[82%] text-white transition-transform group-hover:rotate-3"
+          className="size-[86%] relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
         >
-          <defs>
-            <linearGradient id="rp-flame-grad" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#FFA100" />
-              <stop offset="50%" stopColor="#FF4D00" />
-              <stop offset="100%" stopColor="#FF0055" />
-            </linearGradient>
-            <linearGradient id="rp-pulse-grad" x1="2" y1="24" x2="34" y2="24" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#FFC837" />
-              <stop offset="100%" stopColor="#FF8008" />
-            </linearGradient>
-            <filter id="rp-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-          </defs>
-
-          {/* Glowing Ambient Core */}
-          <circle cx="18" cy="18" r="14" fill="url(#rp-flame-grad)" opacity="0.15" />
-
-          {/* Restaurant Dome / Vibrant Flame Silhouette */}
+          {/* Subtle culinary steam wisps */}
           <path
-            d="M18 5C14.5 10 11.5 13.5 11.5 17.5C11.5 21.2 14.3 24 18 24C21.7 24 24.5 21.2 24.5 17.5C24.5 14 22 10.8 18 5Z"
-            fill="url(#rp-flame-grad)"
+            d="M13.5 5.5C13 4 14 3 13.5 2"
+            stroke="#FFFFFF"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            opacity="0.8"
           />
-          {/* Inner Light Flame Core */}
           <path
-            d="M18 11C16.3 13.5 15 15.5 15 18C15 19.8 16.3 21.2 18 21.2C19.7 21.2 21 19.8 21 18C21 16 19.8 14 18 11Z"
-            fill="#FFF"
-            opacity="0.9"
+            d="M18 5C17.5 3.5 18.5 2.5 18 1.5"
+            stroke="#FFE600"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M22.5 5.5C22 4 23 3 22.5 2"
+            stroke="#FFFFFF"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            opacity="0.8"
           />
 
-          {/* Dynamic Heartbeat / Operational Pulse Line Across Base */}
+          {/* Cloche Finial Handle */}
+          <circle cx="18" cy="7.5" r="2" fill="#FFFFFF" />
+
+          {/* Gleaming White Culinary Cloche Dome */}
           <path
-            d="M3 27L10 27L13 22L16 31L20 20L23 27L33 27"
-            stroke="url(#rp-pulse-grad)"
-            strokeWidth="2.5"
+            d="M8.5 22C8.5 14.5 12.5 10.5 18 10.5C23.5 10.5 27.5 14.5 27.5 22H8.5Z"
+            fill="#FFFFFF"
+            fillOpacity="0.95"
+          />
+
+          {/* Inner Cloche Depth Arc */}
+          <path
+            d="M11 20.5C12 16 14.8 13 18 13C21.2 13 24 16 25 20.5"
+            stroke="#FFE600"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            opacity="0.85"
+          />
+
+          {/* High-Tech Pulse Baseline & Dynamic ECG Heartbeat Wave */}
+          {/* Shadow track for maximum pop */}
+          <path
+            d="M3.5 26.5H10.5L13.5 18L17.5 31.5L21 16L24 26.5H32.5"
+            stroke="#8B0000"
+            strokeWidth="3.2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            filter="url(#rp-glow)"
+            opacity="0.35"
           />
+          {/* Radiant Gold Energy Pulse Wave */}
+          <path
+            d="M3.5 26.5H10.5L13.5 18L17.5 31.5L21 16L24 26.5H32.5"
+            stroke="#FFE600"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* White High-Voltage Core Line */}
+          <path
+            d="M3.5 26.5H10.5L13.5 18L17.5 31.5L21 16L24 26.5H32.5"
+            stroke="#FFFFFF"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {/* Pulse Signal Beat Dots */}
+          <circle cx="17.5" cy="31.5" r="1.4" fill="#FFFFFF" />
+          <circle cx="21" cy="16" r="1.4" fill="#FFE600" />
         </svg>
       </span>
     </span>
@@ -408,3 +443,4 @@ export function ZomatoButton({
     </a>
   );
 }
+

@@ -506,12 +506,10 @@ export const DEFAULT_TENANTS: TenantConfig[] = [
     branches: [
       {
         id: "taramani",
-        name: "Taramani (Flagship)",
+        name: "Tharamani / Kalikundram",
         address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
         phone: "+91 70922 21808",
       },
-      { id: "adyar", name: "Adyar", address: "Lattice Bridge Road, Adyar, Chennai", phone: "+91 98844 30710" },
-      { id: "velachery", name: "Velachery", address: "100 Feet Road, Velachery, Chennai", phone: "+91 98844 30710" },
     ],
     enabledModules: {
       dashboard: true,
@@ -922,12 +920,10 @@ function seed(): DB {
   const branches: Branch[] = [
     {
       id: "taramani",
-      name: "Taramani (Flagship)",
+      name: "Tharamani / Kalikundram",
       address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
       phone: "+91 70922 21808",
     },
-    { id: "adyar", name: "Adyar", address: "Lattice Bridge Road, Adyar, Chennai", phone: "+91 98844 30710" },
-    { id: "velachery", name: "Velachery", address: "100 Feet Road, Velachery, Chennai", phone: "+91 98844 30710" },
   ];
 
   const items: Item[] = SPOTLIGHT_DEFAULT_ITEMS.map((i) => ({ ...i }));
@@ -953,10 +949,10 @@ function seed(): DB {
     { id: "zomato", name: "Zomato", commissionPct: 24, packagingCost: 12 },
   ];
 
-  // 21 days of believable demo sales so charts and reports are never empty.
+  // 21 days of historical demo sales (yesterday and prior). Today (d=0) starts completely clean!
   const sales: Sale[] = [];
   const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)]!;
-  for (let d = 20; d >= 0; d--) {
+  for (let d = 20; d >= 1; d--) {
     const day = new Date();
     day.setDate(day.getDate() - d);
     const orders = 26 + Math.floor(Math.random() * 20);
@@ -1056,7 +1052,7 @@ export function generateManamSeedSales(channels: Channel[]): Sale[] {
   const manamItems = MANAM_DEFAULT_ITEMS.filter((i) =>
     i.category === "biryani" || i.category === "parotta" || i.category === "starter" || i.category === "chinese"
   );
-  for (let d = 20; d >= 0; d--) {
+  for (let d = 20; d >= 1; d--) {
     const day = new Date();
     day.setDate(day.getDate() - d);
     const orders = 18 + Math.floor(Math.random() * 14);
@@ -1163,16 +1159,20 @@ export function sanitizeAndDeduplicateItems(items: Item[]): Item[] {
   return Array.from(seen.values());
 }
 
-if (typeof window !== "undefined") {
-  if ("BroadcastChannel" in window) {
+function getBroadcastBus(): BroadcastChannel | null {
+  if (typeof window === "undefined" || !("BroadcastChannel" in window)) return null;
+  if (!broadcastBus) {
     try {
       broadcastBus = new BroadcastChannel(SYNC_CHANNEL_NAME);
       broadcastBus.onmessage = (event) => {
-        if (event.data?.type === "SLB_STORE_UPDATED") {
+        if (event.data?.type === "SLB_STORE_UPDATED" || event.data?.type === "TENANT_MODULES_CHANGED") {
           cache = null;
           listeners.forEach((l) => l());
           try {
             window.dispatchEvent(new CustomEvent("slb_store_updated", { detail: Date.now() }));
+            if (event.data?.type === "TENANT_MODULES_CHANGED") {
+              window.dispatchEvent(new CustomEvent("tenant_modules_changed", { detail: event.data }));
+            }
           } catch {}
         }
       };
@@ -1180,6 +1180,11 @@ if (typeof window !== "undefined") {
       // fallback to storage event
     }
   }
+  return broadcastBus;
+}
+
+if (typeof window !== "undefined") {
+  getBroadcastBus();
 
   window.addEventListener("storage", (e) => {
     if (e.key === KEY) {
@@ -1196,21 +1201,32 @@ if (typeof window !== "undefined") {
     listeners.forEach((l) => l());
   });
 
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      cache = null;
+      listeners.forEach((l) => l());
+    }
+  });
+
   window.addEventListener("slb_store_updated", () => {
     cache = null;
     listeners.forEach((l) => l());
   });
 }
 
-function notifyAllTabs() {
+export function notifyAllTabs(extraData?: any) {
   try {
-    broadcastBus?.postMessage({ type: "SLB_STORE_UPDATED", timestamp: Date.now() });
+    const bus = getBroadcastBus();
+    bus?.postMessage({ type: "SLB_STORE_UPDATED", timestamp: Date.now(), ...(extraData || {}) });
   } catch {
     // broadcast fallback
   }
   if (typeof window !== "undefined") {
     try {
       window.dispatchEvent(new CustomEvent("slb_store_updated", { detail: Date.now() }));
+      if (extraData?.type === "TENANT_MODULES_CHANGED") {
+        window.dispatchEvent(new CustomEvent("tenant_modules_changed", { detail: extraData }));
+      }
     } catch {
       // custom event fallback
     }
@@ -1381,10 +1397,18 @@ export function getDB(): DB {
     if (spotlightT.phone !== "+91 70922 21808" || !spotlightT.address.includes("No. 14, Kalikundram")) {
       spotlightT.phone = "+91 70922 21808";
       spotlightT.address = "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113";
-      if (spotlightT.branches && spotlightT.branches.length > 0) {
-        spotlightT.branches[0].phone = "+91 70922 21808";
-        spotlightT.branches[0].address = "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113";
-      }
+      needsPersist = true;
+    }
+    // Spot Light Biriyani is strictly a single-location shop (Kalikundram/Tharamani)
+    if (!spotlightT.branches || spotlightT.branches.length !== 1 || spotlightT.branches.some((b) => b.id === "adyar" || b.id === "velachery")) {
+      spotlightT.branches = [
+        {
+          id: "taramani",
+          name: "Tharamani / Kalikundram",
+          address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
+          phone: "+91 70922 21808",
+        },
+      ];
       needsPersist = true;
     }
     if (!spotlightT.items || spotlightT.items.length === 0 || !spotlightT.items.some((i) => i.name.toLowerCase().includes("beef biriyani"))) {
@@ -1397,6 +1421,40 @@ export function getDB(): DB {
         spotlightT.items = withoutMutton;
         needsPersist = true;
       }
+    }
+  }
+
+  // Ensure global cache branches are single-location for Spotlight
+  if (cache.branches && cache.branches.some((b) => b.id === "adyar" || b.id === "velachery")) {
+    cache.branches = [
+      {
+        id: "taramani",
+        name: "Tharamani / Kalikundram",
+        address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
+        phone: "+91 70922 21808",
+      },
+    ];
+    cache.settings.activeBranchId = "taramani";
+    cache.settings.dailyBatchCapacity = { taramani: 160 };
+    needsPersist = true;
+  }
+
+  // Purge any legacy mock sales from non-existent branches (Adyar, Velachery) and seeded sales from today
+  if (Array.isArray(cache.sales)) {
+    const todayYMD = new Date().toISOString().slice(0, 10);
+    const cleaned = cache.sales.filter((s) => {
+      if (s.branchId === "adyar" || s.branchId === "velachery") return false;
+      // Filter out auto-seeded bills from today
+      if (s.date && s.date.slice(0, 10) === todayYMD) {
+        if (s.branchId === "taramani" && s.id && (s.id.startsWith("s-") || s.id.length <= 8)) {
+          return false;
+        }
+      }
+      return true;
+    });
+    if (cleaned.length !== cache.sales.length) {
+      cache.sales = cleaned;
+      needsPersist = true;
     }
   }
 
@@ -1494,7 +1552,10 @@ export function useDB(): DB | null {
         tenants: (current.tenants || []).map((t) => ({
           ...t,
           enabledModules: { ...t.enabledModules },
-          branches: (t.branches || []).map((b) => ({ ...b })),
+          branches: (t.branches || []).map((b) => ({
+            ...b,
+            enabledModules: b.enabledModules ? { ...b.enabledModules } : undefined,
+          })),
         })),
       });
     };
@@ -1511,16 +1572,26 @@ export function useDB(): DB | null {
       cache = null;
       sync();
     };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        cache = null;
+        sync();
+      }
+    };
 
     window.addEventListener("storage", onStorage);
     window.addEventListener("slb_store_updated", onCustom);
+    window.addEventListener("tenant_modules_changed", onCustom);
     window.addEventListener("focus", onCustom);
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       listeners.delete(sync);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("slb_store_updated", onCustom);
+      window.removeEventListener("tenant_modules_changed", onCustom);
       window.removeEventListener("focus", onCustom);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
   return db;
@@ -2010,7 +2081,8 @@ export function updateTenant(updated: TenantConfig) {
       d.tenants.push({ ...updated });
     }
     // If updating currently active tenant, sync top-level settings
-    const isActive = d.activeTenantId === updated.id;
+    const activeT = getActiveTenant(d);
+    const isActive = d.activeTenantId === updated.id || (activeT && activeT.id === updated.id);
 
     if (isActive) {
       d.settings.businessName = updated.businessName;
@@ -2030,6 +2102,7 @@ export function updateTenant(updated: TenantConfig) {
       }
     }
   });
+  notifyAllTabs({ type: "TENANT_MODULES_CHANGED", tenantId: updated.id, modules: updated.enabledModules });
 }
 
 /**

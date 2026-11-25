@@ -76,6 +76,7 @@ export async function pullSalesFromCloud(): Promise<Sale[]> {
               '[]'::json
             ) AS lines
           FROM "Sale" s
+          WHERE s."branchId" NOT IN ('adyar', 'velachery')
           ORDER BY s."date" DESC
           LIMIT 500;
         `,

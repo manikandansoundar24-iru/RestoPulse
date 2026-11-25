@@ -89,6 +89,16 @@ function Settings() {
     toast.success('Dishes and Deg Batches reloaded with latest defaults!');
   };
 
+  const handleResetTodaySales = () => {
+    if (window.confirm("Start a Fresh Day?\n\nThis will clear today's test bills so Today's Sales is 0, Token starts at #1, and Kitchen Deg capacity is fresh at 100%. (Historical reports from prior days remain preserved).")) {
+      const todayYMD = new Date().toISOString().slice(0, 10);
+      setDB((d) => {
+        d.sales = (d.sales || []).filter((s) => !s.date || s.date.slice(0, 10) !== todayYMD);
+      });
+      toast.success("Today's test bills cleared! Token is now #1 and Kitchen Deg is 100% fresh.");
+    }
+  };
+
   const handleResetSeedData = () => {
     if (window.confirm('Reset POS Data to Factory Seed Defaults?\n\nThis will reset menu dishes to authentic defaults (Beef Biriyani, Chicken 65 Biriyani), reset inventory, and clear old test sales so you have a clean slate for the trial/demo.')) {
       resetDB();
@@ -331,6 +341,16 @@ function Settings() {
                 className="rounded-lg border border-border bg-card px-3.5 py-2 text-xs font-bold text-foreground hover:border-primary transition-all shadow-2xs"
               >
                 Restore from Backup
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetTodaySales}
+                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-bold text-amber-600 hover:bg-amber-600 hover:text-white transition-all shadow-2xs flex items-center gap-1.5"
+                title="Clear today test orders so token starts at #1 with 0 sold today"
+              >
+                <RotateCcw className="size-3.5" />
+                Start Fresh Day (Token #1)
               </button>
 
               <button

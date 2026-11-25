@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
 import { BarChart3, Boxes, Database, Flame, LayoutDashboard, LogOut, MapPin, Moon, Receipt, Settings, ShieldAlert, ShieldCheck, Smartphone, Sun, UtensilsCrossed } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { getActiveBranchModules, getActiveTenant, getDB, setDB, TenantModules, useDB } from "@/lib/pos-store";
@@ -64,6 +64,32 @@ function AppLayout() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<string>("Staff");
   const [currentRole, setCurrentRole] = useState<string>("");
+  const [moduleTick, setModuleTick] = useState(0);
+
+  // Real-time synchronization of module entitlements across tabs and developer updates
+  useEffect(() => {
+    const handleModuleChange = () => {
+      setModuleTick((t) => t + 1);
+    };
+    window.addEventListener("tenant_modules_changed", handleModuleChange);
+    window.addEventListener("slb_store_updated", handleModuleChange);
+    window.addEventListener("storage", handleModuleChange);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        setModuleTick((t) => t + 1);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", handleModuleChange);
+
+    return () => {
+      window.removeEventListener("tenant_modules_changed", handleModuleChange);
+      window.removeEventListener("slb_store_updated", handleModuleChange);
+      window.removeEventListener("storage", handleModuleChange);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", handleModuleChange);
+    };
+  }, []);
 
   // Automatic background sync: throttled to 5 minutes + debounced tab focus to protect Vercel Origin Transfer
   useEffect(() => {
@@ -183,26 +209,28 @@ function AppLayout() {
       : activeTenant.branches?.[0]?.id;
   const activeModules = getActiveBranchModules(activeTenant, activeBranchId);
 
-  const visibleLinks = LINKS.filter((l) => {
-    // 1. DEVELOPER ROLE: ONLY show Dev Console, completely isolated from restaurant operational screens
-    if (currentRole === "developer") {
-      return l.to === "/app/developer";
-    }
+  const visibleLinks = useMemo(() => {
+    return LINKS.filter((l) => {
+      // 1. DEVELOPER ROLE: ONLY show Dev Console, completely isolated from restaurant operational screens
+      if (currentRole === "developer") {
+        return l.to === "/app/developer";
+      }
 
-    // 2. CLIENT RESTAURANT STAFF (owner, cashier, waiter, kitchen):
-    // Never show Dev Console to client tenants
-    if (l.to === "/app/developer") return false;
+      // 2. CLIENT RESTAURANT STAFF (owner, cashier, waiter, kitchen):
+      // Never show Dev Console to client tenants
+      if (l.to === "/app/developer") return false;
 
-    // Check staff role permissions
-    if (!l.roles.includes(currentRole)) return false;
+      // Check staff role permissions
+      if (!l.roles.includes(currentRole)) return false;
 
-    // Check client tenant feature entitlement modules
-    if (l.module && activeModules[l.module] === false) {
-      return false;
-    }
+      // Check client tenant feature entitlement modules
+      if (l.module && activeModules[l.module] === false) {
+        return false;
+      }
 
-    return true;
-  });
+      return true;
+    });
+  }, [currentRole, activeModules, moduleTick]);
 
   if (!isAuthenticated) {
     return (

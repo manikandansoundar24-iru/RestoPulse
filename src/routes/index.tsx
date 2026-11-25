@@ -283,7 +283,7 @@ function Home() {
               <Clock className="size-4 text-primary" /> 12:30 pm – 10:30 pm daily
             </span>
             <span className="flex items-center gap-2">
-              <MapPin className="size-4 text-primary" /> Tharamani · Adyar · Velachery
+              <MapPin className="size-4 text-primary" /> No. 14, Kalikundram Main Road · Tharamani
             </span>
             <span className="flex items-center gap-2">
               <Bike className="size-4 text-primary" /> Fast Delivery on Swiggy &amp; Zomato
@@ -302,7 +302,7 @@ function Home() {
                 Order Spot Light Biriyani Delivered to Your Doorstep
               </p>
               <p className="text-xs text-muted-foreground">
-                Available on Swiggy &amp; Zomato across Kalikundram, Tharamani, OMR, Velachery &amp; Adyar.
+                Available on Swiggy &amp; Zomato for delivery across Kalikundram, Tharamani &amp; OMR.
               </p>
             </div>
           </div>
