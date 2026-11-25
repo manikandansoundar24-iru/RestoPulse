@@ -307,45 +307,54 @@ function AppLayout() {
 
               {/* Right: Branch Selector + Theme + Logout */}
               <div className="flex items-center gap-1.5 shrink-0">
-                {/* Branch dropdown */}
-                <div className="flex items-center gap-1 rounded-lg border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] shadow-2xs">
-                  <MapPin className="size-3 text-primary shrink-0" />
-                  <select
-                    value={
-                      (activeTenant.branches && activeTenant.branches.some((b) => b.id === db?.settings.activeBranchId))
-                        ? (db?.settings.activeBranchId ?? "")
-                        : (activeTenant.branches?.[0]?.id ?? "")
-                    }
-                    onChange={(e) => {
-                      const targetBranchId = e.target.value;
-                      const branchesList = activeTenant.branches && activeTenant.branches.length > 0 ? activeTenant.branches : (db ?? getDB()).branches;
-                      const targetBranch = branchesList.find((b) => b.id === targetBranchId);
-                      setDB((d) => {
-                        d.settings.activeBranchId = targetBranchId;
-                        if (d.tenants) {
-                          const t = d.tenants.find((item) => item.id === activeTenant.id);
-                          if (t && targetBranch) {
-                            t.activeBranchName = targetBranch.name;
-                            t.address = targetBranch.address || t.address;
-                            t.phone = targetBranch.phone || t.phone;
+                {/* Branch Location: Selector for multi-branch or clean static location badge */}
+                {activeModules.multiBranch && (activeTenant.branches?.length ?? 1) > 1 ? (
+                  <div className="flex items-center gap-1 rounded-lg border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] shadow-2xs">
+                    <MapPin className="size-3 text-primary shrink-0" />
+                    <select
+                      value={
+                        (activeTenant.branches && activeTenant.branches.some((b) => b.id === db?.settings.activeBranchId))
+                          ? (db?.settings.activeBranchId ?? "")
+                          : (activeTenant.branches?.[0]?.id ?? "")
+                      }
+                      onChange={(e) => {
+                        const targetBranchId = e.target.value;
+                        const branchesList = activeTenant.branches && activeTenant.branches.length > 0 ? activeTenant.branches : (db ?? getDB()).branches;
+                        const targetBranch = branchesList.find((b) => b.id === targetBranchId);
+                        setDB((d) => {
+                          d.settings.activeBranchId = targetBranchId;
+                          if (d.tenants) {
+                            const t = d.tenants.find((item) => item.id === activeTenant.id);
+                            if (t && targetBranch) {
+                              t.activeBranchName = targetBranch.name;
+                              t.address = targetBranch.address || t.address;
+                              t.phone = targetBranch.phone || t.phone;
+                            }
                           }
-                        }
-                      });
-                      toast.success(`Branch: ${targetBranch?.name || targetBranchId}`);
-                    }}
-                    className="rounded border-none bg-transparent py-0 text-[11px] font-bold text-primary focus:outline-none cursor-pointer max-w-[95px] truncate"
-                    title="Select restaurant branch"
-                  >
-                    {(activeTenant.branches && activeTenant.branches.length > 0
-                      ? activeTenant.branches
-                      : (db ?? getDB()).branches
-                    ).map((b) => (
-                      <option key={b.id} value={b.id} className="bg-card text-foreground font-medium">
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                        });
+                        toast.success(`Branch: ${targetBranch?.name || targetBranchId}`);
+                      }}
+                      className="rounded border-none bg-transparent py-0 text-[11px] font-bold text-primary focus:outline-none cursor-pointer max-w-[95px] truncate"
+                      title="Select restaurant branch"
+                    >
+                      {(activeTenant.branches && activeTenant.branches.length > 0
+                        ? activeTenant.branches
+                        : (db ?? getDB()).branches
+                      ).map((b) => (
+                        <option key={b.id} value={b.id} className="bg-card text-foreground font-medium">
+                          {b.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/20 px-2 py-1 text-[11px] shadow-2xs">
+                    <MapPin className="size-3 text-primary shrink-0" />
+                    <span className="font-bold text-[11px] text-foreground max-w-[95px] truncate" title={activeTenant.activeBranchName || activeTenant.branches?.[0]?.name || "Main Kitchen"}>
+                      {activeTenant.activeBranchName || activeTenant.branches?.[0]?.name || "Main Kitchen"}
+                    </span>
+                  </div>
+                )}
 
                 {/* Theme Toggle */}
                 <button
@@ -403,45 +412,54 @@ function AppLayout() {
                   </span>
                 </div>
 
-                {/* 2. Independent Branch Location Selector */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-2.5 sm:px-3 py-1.5 text-xs shadow-2xs">
-                  <MapPin className="size-3.5 text-primary shrink-0" />
-                  <select
-                    value={
-                      (activeTenant.branches && activeTenant.branches.some((b) => b.id === db?.settings.activeBranchId))
-                        ? (db?.settings.activeBranchId ?? "")
-                        : (activeTenant.branches?.[0]?.id ?? "")
-                    }
-                    onChange={(e) => {
-                      const targetBranchId = e.target.value;
-                      const branchesList = activeTenant.branches && activeTenant.branches.length > 0 ? activeTenant.branches : (db ?? getDB()).branches;
-                      const targetBranch = branchesList.find((b) => b.id === targetBranchId);
-                      setDB((d) => {
-                        d.settings.activeBranchId = targetBranchId;
-                        if (d.tenants) {
-                          const t = d.tenants.find((item) => item.id === activeTenant.id);
-                          if (t && targetBranch) {
-                            t.activeBranchName = targetBranch.name;
-                            t.address = targetBranch.address || t.address;
-                            t.phone = targetBranch.phone || t.phone;
+                {/* 2. Independent Branch Location Selector or Clean Single-Location Badge */}
+                {activeModules.multiBranch && (activeTenant.branches?.length ?? 1) > 1 ? (
+                  <div className="flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-2.5 sm:px-3 py-1.5 text-xs shadow-2xs">
+                    <MapPin className="size-3.5 text-primary shrink-0" />
+                    <select
+                      value={
+                        (activeTenant.branches && activeTenant.branches.some((b) => b.id === db?.settings.activeBranchId))
+                          ? (db?.settings.activeBranchId ?? "")
+                          : (activeTenant.branches?.[0]?.id ?? "")
+                      }
+                      onChange={(e) => {
+                        const targetBranchId = e.target.value;
+                        const branchesList = activeTenant.branches && activeTenant.branches.length > 0 ? activeTenant.branches : (db ?? getDB()).branches;
+                        const targetBranch = branchesList.find((b) => b.id === targetBranchId);
+                        setDB((d) => {
+                          d.settings.activeBranchId = targetBranchId;
+                          if (d.tenants) {
+                            const t = d.tenants.find((item) => item.id === activeTenant.id);
+                            if (t && targetBranch) {
+                              t.activeBranchName = targetBranch.name;
+                              t.address = targetBranch.address || t.address;
+                              t.phone = targetBranch.phone || t.phone;
+                            }
                           }
-                        }
-                      });
-                      toast.success(`Active branch switched to ${targetBranch?.name || targetBranchId}`);
-                    }}
-                    className="rounded-md border-none bg-transparent py-0 text-xs font-bold text-primary focus:outline-none cursor-pointer max-w-[125px] sm:max-w-[170px] truncate"
-                    title="Select active restaurant branch"
-                  >
-                    {(activeTenant.branches && activeTenant.branches.length > 0
-                      ? activeTenant.branches
-                      : (db ?? getDB()).branches
-                    ).map((b) => (
-                      <option key={b.id} value={b.id} className="bg-card text-foreground font-medium">
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                        });
+                        toast.success(`Active branch switched to ${targetBranch?.name || targetBranchId}`);
+                      }}
+                      className="rounded-md border-none bg-transparent py-0 text-xs font-bold text-primary focus:outline-none cursor-pointer max-w-[125px] sm:max-w-[170px] truncate"
+                      title="Select active restaurant branch"
+                    >
+                      {(activeTenant.branches && activeTenant.branches.length > 0
+                        ? activeTenant.branches
+                        : (db ?? getDB()).branches
+                      ).map((b) => (
+                        <option key={b.id} value={b.id} className="bg-card text-foreground font-medium">
+                          {b.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-muted/20 px-2.5 sm:px-3 py-1.5 text-xs shadow-2xs">
+                    <MapPin className="size-3.5 text-primary shrink-0" />
+                    <span className="font-bold text-xs text-foreground max-w-[140px] sm:max-w-[190px] truncate" title={activeTenant.activeBranchName || activeTenant.branches?.[0]?.name || "Main Kitchen"}>
+                      {activeTenant.activeBranchName || activeTenant.branches?.[0]?.name || "Main Kitchen"}
+                    </span>
+                  </div>
+                )}
 
                 {/* Neon Cloud PostgreSQL Sync */}
                 <button

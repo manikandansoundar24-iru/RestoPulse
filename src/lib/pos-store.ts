@@ -1099,7 +1099,31 @@ const listeners = new Set<() => void>();
 
 // Cross-tab real-time sync broadcast bus
 const SYNC_CHANNEL_NAME = "spotlight_pos_cross_tab_bus";
+const ENTITLEMENTS_PREFIX = "slb.tenant.entitlements.";
 let broadcastBus: BroadcastChannel | null = null;
+
+export function saveTenantEntitlementsLocally(
+  tenantId: string,
+  data: { enabledModules?: TenantModules; degBatchEnabled?: boolean; branches?: Branch[] }
+) {
+  if (typeof window === "undefined" || !tenantId) return;
+  try {
+    window.localStorage.setItem(ENTITLEMENTS_PREFIX + tenantId, JSON.stringify(data));
+  } catch (err) {
+    console.warn("Failed to store tenant entitlements locally:", err);
+  }
+}
+
+export function loadTenantEntitlementsLocally(
+  tenantId: string
+): { enabledModules?: TenantModules; degBatchEnabled?: boolean; branches?: Branch[] } | null {
+  if (typeof window === "undefined" || !tenantId) return null;
+  try {
+    const raw = window.localStorage.getItem(ENTITLEMENTS_PREFIX + tenantId);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+}
 
 export function normalizeCategory(cat: string): Category {
   const c = (cat || "").trim().toLowerCase();
@@ -1166,6 +1190,19 @@ function getBroadcastBus(): BroadcastChannel | null {
       broadcastBus = new BroadcastChannel(SYNC_CHANNEL_NAME);
       broadcastBus.onmessage = (event) => {
         if (event.data?.type === "SLB_STORE_UPDATED" || event.data?.type === "TENANT_MODULES_CHANGED") {
+          if (event.data?.tenant) {
+            saveTenantEntitlementsLocally(event.data.tenant.id, {
+              enabledModules: event.data.tenant.enabledModules,
+              degBatchEnabled: event.data.tenant.degBatchEnabled,
+              branches: event.data.tenant.branches,
+            });
+            if (cache?.tenants) {
+              const idx = cache.tenants.findIndex((t) => t.id === event.data.tenant.id);
+              if (idx >= 0) {
+                cache.tenants[idx] = { ...event.data.tenant };
+              }
+            }
+          }
           cache = null;
           listeners.forEach((l) => l());
           try {
@@ -1187,11 +1224,12 @@ if (typeof window !== "undefined") {
   getBroadcastBus();
 
   window.addEventListener("storage", (e) => {
-    if (e.key === KEY) {
+    if (e.key === KEY || (e.key && e.key.startsWith(ENTITLEMENTS_PREFIX))) {
       cache = null;
       listeners.forEach((l) => l());
       try {
         window.dispatchEvent(new CustomEvent("slb_store_updated", { detail: Date.now() }));
+        window.dispatchEvent(new CustomEvent("tenant_modules_changed", { detail: Date.now() }));
       } catch {}
     }
   });
@@ -1209,6 +1247,11 @@ if (typeof window !== "undefined") {
   });
 
   window.addEventListener("slb_store_updated", () => {
+    cache = null;
+    listeners.forEach((l) => l());
+  });
+
+  window.addEventListener("tenant_modules_changed", () => {
     cache = null;
     listeners.forEach((l) => l());
   });
@@ -1401,12 +1444,15 @@ export function getDB(): DB {
     }
     // Spot Light Biriyani is strictly a single-location shop (Kalikundram/Tharamani)
     if (!spotlightT.branches || spotlightT.branches.length !== 1 || spotlightT.branches.some((b) => b.id === "adyar" || b.id === "velachery")) {
+      const existingTaramani = spotlightT.branches?.find((b) => b.id === "taramani");
       spotlightT.branches = [
         {
           id: "taramani",
           name: "Tharamani / Kalikundram",
           address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
           phone: "+91 70922 21808",
+          enabledModules: existingTaramani?.enabledModules || spotlightT.enabledModules,
+          degBatchEnabled: existingTaramani?.degBatchEnabled !== undefined ? existingTaramani.degBatchEnabled : spotlightT.degBatchEnabled,
         },
       ];
       needsPersist = true;
@@ -1439,23 +1485,62 @@ export function getDB(): DB {
     needsPersist = true;
   }
 
-  // Purge any legacy mock sales from non-existent branches (Adyar, Velachery) and seeded sales from today
+  // Aggressively protect browser localStorage quota (5MB limit) and purge stale seeded mock data
   if (Array.isArray(cache.sales)) {
     const todayYMD = new Date().toISOString().slice(0, 10);
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const cutoffISO = fourteenDaysAgo.toISOString();
+
     const cleaned = cache.sales.filter((s) => {
+      // 1. Purge legacy mock sales from defunct branches
       if (s.branchId === "adyar" || s.branchId === "velachery") return false;
-      // Filter out auto-seeded bills from today
+      // 2. Filter out auto-seeded test bills generated today
       if (s.date && s.date.slice(0, 10) === todayYMD) {
         if (s.branchId === "taramani" && s.id && (s.id.startsWith("s-") || s.id.length <= 8)) {
           return false;
         }
       }
+      // 3. Keep sales within the last 14 days
+      if (s.date && s.date < cutoffISO) {
+        return false;
+      }
       return true;
     });
-    if (cleaned.length !== cache.sales.length) {
-      cache.sales = cleaned;
+
+    // 4. Cap total sales in localStorage to max 200 sales to guarantee payload stays ~120KB
+    const finalSales = cleaned.length > 200 ? cleaned.slice(-200) : cleaned;
+
+    if (finalSales.length !== cache.sales.length) {
+      cache.sales = finalSales;
       needsPersist = true;
     }
+  }
+
+  // Ensure persistent local entitlements are applied to all tenants on read
+  if (Array.isArray(cache.tenants)) {
+    cache.tenants.forEach((t) => {
+      const localEnt = loadTenantEntitlementsLocally(t.id);
+      if (localEnt) {
+        if (localEnt.enabledModules) {
+          t.enabledModules = { ...(t.enabledModules || {}), ...localEnt.enabledModules };
+        }
+        if (localEnt.degBatchEnabled !== undefined) {
+          t.degBatchEnabled = localEnt.degBatchEnabled;
+        }
+        if (localEnt.branches && Array.isArray(localEnt.branches) && localEnt.branches.length > 0) {
+          t.branches = localEnt.branches.map((lb) => {
+            const existing = (t.branches || []).find((b) => b.id === lb.id) || {};
+            return {
+              ...existing,
+              ...lb,
+              enabledModules: lb.enabledModules ? { ...lb.enabledModules } : existing.enabledModules,
+              degBatchEnabled: lb.degBatchEnabled !== undefined ? lb.degBatchEnabled : existing.degBatchEnabled,
+            };
+          });
+        }
+      }
+    });
   }
 
   // Ensure global cache.items has Spotlight beef specialties
@@ -1493,7 +1578,19 @@ function persist() {
   try {
     window.localStorage.setItem(KEY, JSON.stringify(cache));
   } catch (err) {
-    console.error("Failed to persist POS state to localStorage:", err);
+    console.warn("Storage quota warning or write failure, self-healing sales storage...", err);
+    if (cache.sales && cache.sales.length > 50) {
+      cache.sales = cache.sales.slice(-50);
+      try {
+        window.localStorage.setItem(KEY, JSON.stringify(cache));
+        return;
+      } catch (e2) {
+        cache.sales = cache.sales.slice(-20);
+        try {
+          window.localStorage.setItem(KEY, JSON.stringify(cache));
+        } catch {}
+      }
+    }
   }
 }
 
@@ -1551,9 +1648,11 @@ export function useDB(): DB | null {
         kdsOrders: (current.kdsOrders || []).map((o) => ({ ...o, lines: (o.lines || []).map((l) => ({ ...l })) })),
         tenants: (current.tenants || []).map((t) => ({
           ...t,
+          degBatchEnabled: t.degBatchEnabled !== false,
           enabledModules: { ...t.enabledModules },
           branches: (t.branches || []).map((b) => ({
             ...b,
+            degBatchEnabled: b.degBatchEnabled !== undefined ? b.degBatchEnabled : t.degBatchEnabled !== false,
             enabledModules: b.enabledModules ? { ...b.enabledModules } : undefined,
           })),
         })),
@@ -1563,7 +1662,7 @@ export function useDB(): DB | null {
     listeners.add(sync);
 
     const onStorage = (e: StorageEvent) => {
-      if (e.key === KEY) {
+      if (e.key === KEY || (e.key && e.key.startsWith(ENTITLEMENTS_PREFIX))) {
         cache = null;
         sync();
       }
@@ -1934,7 +2033,31 @@ export function getActiveTenant(db?: DB | null): TenantConfig {
     activeId = currentDB.activeTenantId || "spotlight-biriyani";
   }
   const found = tenants.find((t) => t.id === activeId || (activeId === "manam" && t.id === "manam-restaurant"));
-  return found ?? tenants[0] ?? DEFAULT_TENANTS[0]!;
+  const res = found ?? tenants[0] ?? DEFAULT_TENANTS[0]!;
+
+  if (typeof window !== "undefined" && res && res.id) {
+    const localEnt = loadTenantEntitlementsLocally(res.id);
+    if (localEnt) {
+      return {
+        ...res,
+        enabledModules: localEnt.enabledModules ? { ...(res.enabledModules || {}), ...localEnt.enabledModules } : res.enabledModules,
+        degBatchEnabled: localEnt.degBatchEnabled !== undefined ? localEnt.degBatchEnabled : res.degBatchEnabled,
+        branches: (localEnt.branches && localEnt.branches.length > 0)
+          ? res.branches?.map((rb) => {
+              const matched = localEnt.branches?.find((b) => b.id === rb.id);
+              if (!matched) return rb;
+              return {
+                ...rb,
+                ...matched,
+                enabledModules: matched.enabledModules ? { ...matched.enabledModules } : rb.enabledModules,
+                degBatchEnabled: matched.degBatchEnabled !== undefined ? matched.degBatchEnabled : rb.degBatchEnabled,
+              };
+            }) || res.branches
+          : res.branches,
+      };
+    }
+  }
+  return res;
 }
 
 /**
@@ -1958,10 +2081,27 @@ export function getActiveBranchModules(tenant?: TenantConfig | null, branchId?: 
     aggregators: true,
   };
   if (!tenant) return defaultModules;
-  const base: TenantModules = {
+  let base: TenantModules = {
     ...defaultModules,
     ...(tenant.enabledModules || {}),
   };
+  if (typeof window !== "undefined" && tenant.id) {
+    const localEnt = loadTenantEntitlementsLocally(tenant.id);
+    if (localEnt) {
+      if (localEnt.enabledModules) {
+        base = { ...base, ...localEnt.enabledModules };
+      }
+      if (branchId && localEnt.branches && localEnt.branches.length > 0) {
+        const br = localEnt.branches.find((b) => b.id === branchId);
+        if (br && br.enabledModules) {
+          return {
+            ...base,
+            ...br.enabledModules,
+          };
+        }
+      }
+    }
+  }
   if (!branchId || !tenant.branches || tenant.branches.length === 0) {
     return base;
   }
@@ -1980,6 +2120,20 @@ export function getActiveBranchModules(tenant?: TenantConfig | null, branchId?: 
  */
 export function isDegBatchActiveForTenant(tenant?: TenantConfig | null, branchId?: string): boolean {
   if (!tenant) return true;
+  if (typeof window !== "undefined" && tenant.id) {
+    const localEnt = loadTenantEntitlementsLocally(tenant.id);
+    if (localEnt) {
+      if (branchId && localEnt.branches && localEnt.branches.length > 0) {
+        const br = localEnt.branches.find((b) => b.id === branchId);
+        if (br && br.degBatchEnabled !== undefined) {
+          return br.degBatchEnabled;
+        }
+      }
+      if (localEnt.degBatchEnabled !== undefined) {
+        return localEnt.degBatchEnabled;
+      }
+    }
+  }
   if (branchId && tenant.branches && tenant.branches.length > 0) {
     const br = tenant.branches.find((b) => b.id === branchId);
     if (br && br.degBatchEnabled !== undefined) {
@@ -2102,7 +2256,12 @@ export function updateTenant(updated: TenantConfig) {
       }
     }
   });
-  notifyAllTabs({ type: "TENANT_MODULES_CHANGED", tenantId: updated.id, modules: updated.enabledModules });
+  saveTenantEntitlementsLocally(updated.id, {
+    enabledModules: updated.enabledModules,
+    degBatchEnabled: updated.degBatchEnabled,
+    branches: updated.branches,
+  });
+  notifyAllTabs({ type: "TENANT_MODULES_CHANGED", tenantId: updated.id, tenant: updated, modules: updated.enabledModules });
 }
 
 /**

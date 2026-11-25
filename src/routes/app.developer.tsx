@@ -231,127 +231,148 @@ export function DeveloperSuperAdminPage() {
   };
 
   const handleToggleModule = (moduleKey: keyof TenantModules) => {
-    if (!editTenant) return;
+    setEditTenant((prev) => {
+      if (!prev) return prev;
+      const targetTenantId = prev.id;
+      const currentDB = getDB();
+      const freshTenant = currentDB.tenants?.find((t) => t.id === targetTenantId) || prev;
 
-    if (selectedBranchScope === "all") {
-      const currentVal = activeScopedModules[moduleKey] ?? true;
-      const nextVal = !currentVal;
-      const updatedBranches = (editTenant.branches || []).map((b) => ({
-        ...b,
-        enabledModules: {
-          ...(b.enabledModules || {}),
-          [moduleKey]: nextVal,
-        },
-      }));
-      const updated: TenantConfig = {
-        ...editTenant,
-        enabledModules: {
-          ...(editTenant.enabledModules || {}),
-          [moduleKey]: nextVal,
-        },
-        branches: updatedBranches,
-      };
-      setEditTenant(updated);
+      let updated: TenantConfig;
+      if (selectedBranchScope === "all") {
+        const currentVal = freshTenant.enabledModules?.[moduleKey] ?? true;
+        const nextVal = !currentVal;
+        const updatedBranches = (freshTenant.branches || []).map((b) => ({
+          ...b,
+          enabledModules: {
+            ...(b.enabledModules || {}),
+            [moduleKey]: nextVal,
+          },
+        }));
+        updated = {
+          ...freshTenant,
+          enabledModules: {
+            ...(freshTenant.enabledModules || {}),
+            [moduleKey]: nextVal,
+          },
+          branches: updatedBranches,
+        };
+        toast.info(`Updated module "${moduleKey}" to ${nextVal ? "ENABLED" : "DISABLED"} for all branches of ${updated.businessName}`);
+      } else {
+        const currentBranches = freshTenant.branches || [];
+        const branch = currentBranches.find((b) => b.id === selectedBranchScope);
+        if (!branch) return freshTenant;
+
+        const currentBranchModules = branch.enabledModules || { ...freshTenant.enabledModules };
+        const currentVal = currentBranchModules[moduleKey] ?? (freshTenant.enabledModules?.[moduleKey] ?? true);
+        const nextVal = !currentVal;
+
+        const updatedBranches = currentBranches.map((b) =>
+          b.id === selectedBranchScope
+            ? {
+                ...b,
+                enabledModules: {
+                  ...(b.enabledModules || {}),
+                  [moduleKey]: nextVal,
+                },
+              }
+            : b
+        );
+
+        updated = {
+          ...freshTenant,
+          branches: updatedBranches,
+        };
+        toast.info(`Updated module "${moduleKey}" to ${nextVal ? "ENABLED" : "DISABLED"} for branch ${branch.name}`);
+      }
       updateTenant(updated);
       pushTenantToCloud(updated).catch(() => {});
-      toast.info(`Updated module "${moduleKey}" to ${nextVal ? "ENABLED" : "DISABLED"} for all branches of ${updated.businessName}`);
-    } else {
-      const currentBranches = editTenant.branches || [];
-      const branch = currentBranches.find((b) => b.id === selectedBranchScope);
-      if (!branch) return;
+      return updated;
+    });
+  };
 
-      const currentBranchModules: Partial<TenantModules> = branch.enabledModules || { ...editTenant.enabledModules };
-      const currentVal = currentBranchModules[moduleKey] ?? activeScopedModules[moduleKey] ?? true;
-      const nextVal = !currentVal;
+  const handleToggleDegBatch = () => {
+    setEditTenant((prev) => {
+      if (!prev) return prev;
+      const targetTenantId = prev.id;
+      const currentDB = getDB();
+      const freshTenant = currentDB.tenants?.find((t) => t.id === targetTenantId) || prev;
+
+      let updated: TenantConfig;
+      if (selectedBranchScope === "all") {
+        const currentVal = freshTenant.degBatchEnabled !== false;
+        const nextVal = !currentVal;
+        const updatedBranches = (freshTenant.branches || []).map((b) => ({
+          ...b,
+          degBatchEnabled: nextVal,
+        }));
+        updated = {
+          ...freshTenant,
+          degBatchEnabled: nextVal,
+          branches: updatedBranches,
+        };
+        toast.info(`Deg Batch Tracking set to ${nextVal ? "ON" : "OFF"} for all branches of ${updated.businessName}`);
+      } else {
+        const currentBranches = freshTenant.branches || [];
+        const branch = currentBranches.find((b) => b.id === selectedBranchScope);
+        if (!branch) return freshTenant;
+
+        const currentVal = branch.degBatchEnabled !== undefined ? branch.degBatchEnabled : (freshTenant.degBatchEnabled !== false);
+        const nextVal = !currentVal;
+        const updatedBranches = currentBranches.map((b) =>
+          b.id === selectedBranchScope
+            ? { ...b, degBatchEnabled: nextVal }
+            : b
+        );
+        updated = { ...freshTenant, branches: updatedBranches };
+        toast.info(`Deg Batch Tracking set to ${nextVal ? "ON" : "OFF"} for branch ${branch.name}`);
+      }
+      updateTenant(updated);
+      pushTenantToCloud(updated).catch(() => {});
+      return updated;
+    });
+  };
+
+  const handleResetBranchScope = () => {
+    if (!editTenant || selectedBranchScope === "all") return;
+    setEditTenant((prev) => {
+      if (!prev) return prev;
+      const targetTenantId = prev.id;
+      const currentDB = getDB();
+      const freshTenant = currentDB.tenants?.find((t) => t.id === targetTenantId) || prev;
+      const currentBranches = freshTenant.branches || [];
+      const branch = currentBranches.find((b) => b.id === selectedBranchScope);
+      if (!branch) return freshTenant;
 
       const updatedBranches = currentBranches.map((b) =>
         b.id === selectedBranchScope
           ? {
               ...b,
-              enabledModules: {
-                ...(b.enabledModules || {}),
-                [moduleKey]: nextVal,
-              },
+              enabledModules: undefined,
+              degBatchEnabled: undefined,
             }
           : b
       );
-
-      const updated: TenantConfig = {
-        ...editTenant,
-        branches: updatedBranches,
-      };
-      setEditTenant(updated);
+      const updated = { ...freshTenant, branches: updatedBranches };
       updateTenant(updated);
       pushTenantToCloud(updated).catch(() => {});
-      toast.info(`Updated module "${moduleKey}" to ${nextVal ? "ENABLED" : "DISABLED"} for branch ${branch.name}`);
-    }
-  };
-
-  const handleToggleDegBatch = () => {
-    if (!editTenant) return;
-    if (selectedBranchScope === "all") {
-      const currentVal = activeScopedDegBatch;
-      const nextVal = !currentVal;
-      const updatedBranches = (editTenant.branches || []).map((b) => ({
-        ...b,
-        degBatchEnabled: nextVal,
-      }));
-      const updated = {
-        ...editTenant,
-        degBatchEnabled: nextVal,
-        branches: updatedBranches,
-      };
-      setEditTenant(updated);
-      updateTenant(updated);
-      pushTenantToCloud(updated).catch(() => {});
-      toast.info(`Deg Batch Tracking set to ${nextVal ? "ON" : "OFF"} for all branches of ${updated.businessName}`);
-    } else {
-      const currentBranches = editTenant.branches || [];
-      const branch = currentBranches.find((b) => b.id === selectedBranchScope);
-      if (!branch) return;
-      const currentVal = branch.degBatchEnabled !== undefined ? branch.degBatchEnabled : (editTenant.degBatchEnabled !== false);
-      const nextVal = !currentVal;
-      const updatedBranches = currentBranches.map((b) =>
-        b.id === selectedBranchScope
-          ? { ...b, degBatchEnabled: nextVal }
-          : b
-      );
-      const updated = { ...editTenant, branches: updatedBranches };
-      setEditTenant(updated);
-      updateTenant(updated);
-      pushTenantToCloud(updated).catch(() => {});
-      toast.info(`Deg Batch Tracking set to ${nextVal ? "ON" : "OFF"} for branch ${branch.name}`);
-    }
-  };
-
-  const handleResetBranchScope = () => {
-    if (!editTenant || selectedBranchScope === "all") return;
-    const currentBranches = editTenant.branches || [];
-    const branch = currentBranches.find((b) => b.id === selectedBranchScope);
-    if (!branch) return;
-
-    const updatedBranches = currentBranches.map((b) =>
-      b.id === selectedBranchScope
-        ? {
-            ...b,
-            enabledModules: undefined,
-            degBatchEnabled: undefined,
-          }
-        : b
-    );
-    const updated = { ...editTenant, branches: updatedBranches };
-    setEditTenant(updated);
-    updateTenant(updated);
-    pushTenantToCloud(updated).catch(() => {});
-    toast.success(`Reset ${branch.name} to inherit default restaurant plan.`);
+      toast.success(`Reset ${branch.name} to inherit default restaurant plan.`);
+      return updated;
+    });
   };
 
   const handleSaveTenantProfile = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editTenant) return;
-    updateTenant(editTenant);
-    pushTenantToCloud(editTenant).catch(() => {});
-    toast.success(`Saved & Cloud Synced credentials for ${editTenant.businessName}!`, {
+    const currentDB = getDB();
+    const freshTenant = currentDB.tenants?.find((t) => t.id === editTenant.id);
+    const toSave: TenantConfig = {
+      ...editTenant,
+      enabledModules: freshTenant?.enabledModules || editTenant.enabledModules,
+      degBatchEnabled: freshTenant?.degBatchEnabled !== undefined ? freshTenant.degBatchEnabled : editTenant.degBatchEnabled,
+    };
+    updateTenant(toSave);
+    pushTenantToCloud(toSave).catch(() => {});
+    toast.success(`Saved & Cloud Synced credentials for ${toSave.businessName}!`, {
       icon: <CheckCircle2 className="size-4 text-emerald-600" />,
     });
   };

@@ -10,6 +10,7 @@ import {
   totals,
   useDB,
   getActiveTenant,
+  getActiveBranchModules,
   getTenantItems,
   type ChannelId,
 } from "@/lib/pos-store";
@@ -28,6 +29,26 @@ function Reports() {
   if (!db) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   const activeTenant = getActiveTenant(db);
+  const activeBranchId =
+    activeTenant.branches && activeTenant.branches.some((b) => b.id === db?.settings.activeBranchId)
+      ? db?.settings.activeBranchId
+      : activeTenant.branches?.[0]?.id;
+  const activeModules = getActiveBranchModules(activeTenant, activeBranchId);
+
+  if (activeModules.reports === false) {
+    return (
+      <div className="mx-auto max-w-xl py-16 text-center space-y-4">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
+          <Sparkles className="size-7" />
+        </div>
+        <h2 className="text-xl font-black text-foreground">Reports &amp; AI Forecast Disabled</h2>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          The Reports &amp; AI Analytics module is not enabled for <span className="font-bold text-foreground">{activeTenant.businessName}</span>. Contact your platform administrator in the Developer Console to turn on this feature.
+        </p>
+      </div>
+    );
+  }
+
   const sales = filterSales(db, { days, branchId: branch, channel, tenantId: activeTenant.id });
   const t = totals(sales);
   const rows = itemBreakdown(sales);
