@@ -46,6 +46,7 @@ import {
   type Branch,
 } from "@/lib/pos-store";
 import { performFullSync, pushTenantToCloud, pushPlatformConfigToCloud } from "@/lib/neon-sync";
+import { RestoPulseLogo } from "@/components/brand/BrandLogos";
 
 export const Route = createFileRoute("/app/developer")({
   head: () => ({
@@ -224,7 +225,7 @@ export function DeveloperSuperAdminPage() {
 
   const handleBrandChange = (brand: string) => {
     setSaasBrand(brand);
-    pushPlatformConfigToCloud("saasPlatformName", brand).catch(() => {});
+    pushPlatformConfigToCloud("saasPlatformName", brand).catch(() => { });
     toast.success(`SaaS Platform Brand set to "${brand}" across all client screens!`, {
       icon: <Sparkles className="size-4 text-amber-500" />,
     });
@@ -269,12 +270,12 @@ export function DeveloperSuperAdminPage() {
         const updatedBranches = currentBranches.map((b) =>
           b.id === selectedBranchScope
             ? {
-                ...b,
-                enabledModules: {
-                  ...(b.enabledModules || {}),
-                  [moduleKey]: nextVal,
-                },
-              }
+              ...b,
+              enabledModules: {
+                ...(b.enabledModules || {}),
+                [moduleKey]: nextVal,
+              },
+            }
             : b
         );
 
@@ -285,7 +286,7 @@ export function DeveloperSuperAdminPage() {
         toast.info(`Updated module "${moduleKey}" to ${nextVal ? "ENABLED" : "DISABLED"} for branch ${branch.name}`);
       }
       updateTenant(updated);
-      pushTenantToCloud(updated).catch(() => {});
+      pushTenantToCloud(updated).catch(() => { });
       return updated;
     });
   };
@@ -327,7 +328,7 @@ export function DeveloperSuperAdminPage() {
         toast.info(`Deg Batch Tracking set to ${nextVal ? "ON" : "OFF"} for branch ${branch.name}`);
       }
       updateTenant(updated);
-      pushTenantToCloud(updated).catch(() => {});
+      pushTenantToCloud(updated).catch(() => { });
       return updated;
     });
   };
@@ -346,15 +347,15 @@ export function DeveloperSuperAdminPage() {
       const updatedBranches = currentBranches.map((b) =>
         b.id === selectedBranchScope
           ? {
-              ...b,
-              enabledModules: undefined,
-              degBatchEnabled: undefined,
-            }
+            ...b,
+            enabledModules: undefined,
+            degBatchEnabled: undefined,
+          }
           : b
       );
       const updated = { ...freshTenant, branches: updatedBranches };
       updateTenant(updated);
-      pushTenantToCloud(updated).catch(() => {});
+      pushTenantToCloud(updated).catch(() => { });
       toast.success(`Reset ${branch.name} to inherit default restaurant plan.`);
       return updated;
     });
@@ -371,7 +372,7 @@ export function DeveloperSuperAdminPage() {
       degBatchEnabled: freshTenant?.degBatchEnabled !== undefined ? freshTenant.degBatchEnabled : editTenant.degBatchEnabled,
     };
     updateTenant(toSave);
-    pushTenantToCloud(toSave).catch(() => {});
+    pushTenantToCloud(toSave).catch(() => { });
     toast.success(`Saved & Cloud Synced credentials for ${toSave.businessName}!`, {
       icon: <CheckCircle2 className="size-4 text-emerald-600" />,
     });
@@ -413,7 +414,7 @@ export function DeveloperSuperAdminPage() {
 
     setEditTenant(updatedTenant);
     updateTenant(updatedTenant);
-    pushTenantToCloud(updatedTenant).catch(() => {});
+    pushTenantToCloud(updatedTenant).catch(() => { });
     setNewBranchLabel("");
     setNewBranchLoc("");
     setNewBranchPhone("");
@@ -443,7 +444,7 @@ export function DeveloperSuperAdminPage() {
       };
       setEditTenant(updatedTenant);
       updateTenant(updatedTenant);
-      pushTenantToCloud(updatedTenant).catch(() => {});
+      pushTenantToCloud(updatedTenant).catch(() => { });
       toast.success("Branch removed successfully.");
     }
   };
@@ -468,14 +469,14 @@ export function DeveloperSuperAdminPage() {
     const updatedBranches = currentBranches.map((b) =>
       b.id === branchId
         ? {
-            ...b,
-            name: branchEditName.trim(),
-            address: branchEditAddress.trim() || editTenant.address,
-            phone: branchEditPhone.trim() || editTenant.phone,
-            upiId: branchEditUpi.trim() || editTenant.upiId,
-            gstin: branchEditGstin.trim() || editTenant.gstin,
-            fssai: branchEditFssai.trim() || editTenant.fssai,
-          }
+          ...b,
+          name: branchEditName.trim(),
+          address: branchEditAddress.trim() || editTenant.address,
+          phone: branchEditPhone.trim() || editTenant.phone,
+          upiId: branchEditUpi.trim() || editTenant.upiId,
+          gstin: branchEditGstin.trim() || editTenant.gstin,
+          fssai: branchEditFssai.trim() || editTenant.fssai,
+        }
         : b
     );
     const isPrimary = updatedBranches[0]?.id === branchId;
@@ -485,17 +486,17 @@ export function DeveloperSuperAdminPage() {
       activeBranchName: updatedBranches[0]?.name || editTenant.activeBranchName,
       ...(isPrimary
         ? {
-            phone: branchEditPhone.trim() || editTenant.phone,
-            address: branchEditAddress.trim() || editTenant.address,
-            upiId: branchEditUpi.trim() || editTenant.upiId,
-            gstin: branchEditGstin.trim() || editTenant.gstin,
-            fssai: branchEditFssai.trim() || editTenant.fssai,
-          }
+          phone: branchEditPhone.trim() || editTenant.phone,
+          address: branchEditAddress.trim() || editTenant.address,
+          upiId: branchEditUpi.trim() || editTenant.upiId,
+          gstin: branchEditGstin.trim() || editTenant.gstin,
+          fssai: branchEditFssai.trim() || editTenant.fssai,
+        }
         : {}),
     };
     setEditTenant(updatedTenant);
     updateTenant(updatedTenant);
-    pushTenantToCloud(updatedTenant).catch(() => {});
+    pushTenantToCloud(updatedTenant).catch(() => { });
     setEditingBranchId(null);
     toast.success(`Branch "${branchEditName.trim()}" details updated successfully!`);
   };
@@ -583,7 +584,7 @@ export function DeveloperSuperAdminPage() {
       };
       setEditTenant(updated);
       updateTenant(updated);
-      pushTenantToCloud(updated).catch(() => {});
+      pushTenantToCloud(updated).catch(() => { });
       toast.success(`Applied ${plan.replace("_", " ").toUpperCase()} preset plan to all branches of ${updated.businessName}!`);
     } else {
       const currentBranches = editTenant.branches || [];
@@ -592,10 +593,10 @@ export function DeveloperSuperAdminPage() {
       const updatedBranches = currentBranches.map((b) =>
         b.id === selectedBranchScope
           ? {
-              ...b,
-              enabledModules: newModules,
-              degBatchEnabled: degEnabled,
-            }
+            ...b,
+            enabledModules: newModules,
+            degBatchEnabled: degEnabled,
+          }
           : b
       );
       const updated: TenantConfig = {
@@ -604,7 +605,7 @@ export function DeveloperSuperAdminPage() {
       };
       setEditTenant(updated);
       updateTenant(updated);
-      pushTenantToCloud(updated).catch(() => {});
+      pushTenantToCloud(updated).catch(() => { });
       toast.success(`Applied ${plan.replace("_", " ").toUpperCase()} preset plan to branch ${branch.name}!`);
     }
   };
@@ -682,7 +683,7 @@ export function DeveloperSuperAdminPage() {
     };
 
     addTenant(newTenant);
-    pushTenantToCloud(newTenant).catch(() => {});
+    pushTenantToCloud(newTenant).catch(() => { });
     setSelectedTenantId(newTenant.id);
     setShowProvisionModal(false);
 
@@ -790,9 +791,7 @@ export function DeveloperSuperAdminPage() {
       <div className="rounded-3xl border border-red-500/30 bg-gradient-to-r from-red-950/20 via-background to-orange-950/20 p-5 sm:p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white shadow-md">
-              <ShieldAlert className="size-6" />
-            </span>
+            <RestoPulseLogo size="lg" />
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-lg sm:text-xl font-black text-foreground">
@@ -853,11 +852,10 @@ export function DeveloperSuperAdminPage() {
                 key={b.name}
                 type="button"
                 onClick={() => handleBrandChange(b.name)}
-                className={`flex flex-col text-left p-3.5 rounded-2xl border transition-all ${
-                  isSelected
+                className={`flex flex-col text-left p-3.5 rounded-2xl border transition-all ${isSelected
                     ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary"
                     : "border-border/70 bg-muted/20 hover:border-primary/50 hover:bg-muted/40"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-black text-sm text-foreground flex items-center gap-1.5">
@@ -926,11 +924,10 @@ export function DeveloperSuperAdminPage() {
               <div
                 key={t.id}
                 onClick={() => handleSelectClient(t.id)}
-                className={`relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
-                  isSelected
+                className={`relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${isSelected
                     ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/40"
                     : "border-border/70 bg-card hover:border-primary/40 hover:bg-muted/30"
-                }`}
+                  }`}
               >
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-2">
@@ -988,11 +985,10 @@ export function DeveloperSuperAdminPage() {
                         if (el) el.scrollIntoView({ behavior: "smooth" });
                         toast.info(`Configuring features for ${t.businessName}`);
                       }}
-                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs ${
-                        isSelected
+                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs ${isSelected
                           ? "bg-primary text-white shadow-md ring-1 ring-primary/40"
                           : "border border-primary/30 bg-primary/10 text-primary hover:bg-primary hover:text-white"
-                      }`}
+                        }`}
                     >
                       <Sliders className="size-3.5" />
                       {isSelected ? "Editing Features" : "Configure Features ➔"}
@@ -1105,11 +1101,10 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedBranchScope("all")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                    selectedBranchScope === "all"
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${selectedBranchScope === "all"
                       ? "bg-primary text-white shadow-2xs"
                       : "bg-card border border-border text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   🏢 All Branches (Default Plan)
                 </button>
@@ -1120,11 +1115,10 @@ export function DeveloperSuperAdminPage() {
                       key={b.id}
                       type="button"
                       onClick={() => setSelectedBranchScope(b.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
-                        selectedBranchScope === b.id
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${selectedBranchScope === b.id
                           ? "bg-primary text-white shadow-2xs"
                           : "bg-card border border-border text-muted-foreground hover:text-foreground"
-                      }`}
+                        }`}
                     >
                       <span>📍 {b.name}</span>
                       {hasCustom && (
@@ -1152,9 +1146,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("dashboard")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.dashboard ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.dashboard ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.dashboard ? "✓" : "✕"}
                 </button>
@@ -1169,9 +1162,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("captainPos")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.captainPos ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.captainPos ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.captainPos ? "✓" : "✕"}
                 </button>
@@ -1186,9 +1178,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("billing")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.billing ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.billing ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.billing ? "✓" : "✕"}
                 </button>
@@ -1203,9 +1194,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("tables")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.tables ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.tables ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.tables ? "✓" : "✕"}
                 </button>
@@ -1220,9 +1210,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("kds")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.kds ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.kds ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.kds ? "✓" : "✕"}
                 </button>
@@ -1237,9 +1226,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("dynamicUpi")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.dynamicUpi ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.dynamicUpi ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.dynamicUpi ? "✓" : "✕"}
                 </button>
@@ -1254,9 +1242,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("zReport")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.zReport ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.zReport ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.zReport ? "✓" : "✕"}
                 </button>
@@ -1271,9 +1258,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("loyalty")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.loyalty ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.loyalty ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.loyalty ? "✓" : "✕"}
                 </button>
@@ -1288,9 +1274,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={handleToggleDegBatch}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedDegBatch ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedDegBatch ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedDegBatch ? "✓" : "✕"}
                 </button>
@@ -1305,9 +1290,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("stock")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.stock ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.stock ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.stock ? "✓" : "✕"}
                 </button>
@@ -1322,9 +1306,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("reports")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.reports ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.reports ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.reports ? "✓" : "✕"}
                 </button>
@@ -1339,9 +1322,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("menu")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.menu ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.menu ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.menu ? "✓" : "✕"}
                 </button>
@@ -1356,9 +1338,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("multiBranch")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.multiBranch ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.multiBranch ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.multiBranch ? "✓" : "✕"}
                 </button>
@@ -1373,9 +1354,8 @@ export function DeveloperSuperAdminPage() {
                 <button
                   type="button"
                   onClick={() => handleToggleModule("aggregators")}
-                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                    activeScopedModules.aggregators ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
-                  }`}
+                  className={`size-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${activeScopedModules.aggregators ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground border border-border"
+                    }`}
                 >
                   {activeScopedModules.aggregators ? "✓" : "✕"}
                 </button>

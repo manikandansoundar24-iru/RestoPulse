@@ -885,7 +885,15 @@ function Billing() {
     }
   }, []); // Run strictly ONCE on mount — never on db/table mutations to avoid scroll-fighting/shaking!
 
+  // If Tables/Dine-In Floor module is disabled in Developer Console, auto-clear table state
+  useEffect(() => {
+    if (!activeModules.tables && selectedTableId) {
+      setSelectedTableId(null);
+    }
+  }, [activeModules.tables, selectedTableId]);
+
   const [editBatchModalOpen, setEditBatchModalOpen] = useState(false);
+  const [degDetailsModalOpen, setDegDetailsModalOpen] = useState(false);
   const [newBatchCapacity, setNewBatchCapacity] = useState("");
   const [newChickenCap, setNewChickenCap] = useState("");
   const [newMuttonCap, setNewMuttonCap] = useState("");
@@ -1531,103 +1539,56 @@ function Billing() {
       {/* Main 2-Column POS Workspace: Left = Kitchen Deg & Dishes, Right = Cart (Tablet & Desktop Side-by-Side) */}
       <div className="grid gap-4 sm:gap-5 md:grid-cols-[minmax(0,1fr)_330px] lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_390px] w-full min-w-0 max-w-full items-start pb-24 md:pb-6">
         <div className="min-w-0 max-w-full">
-          {/* Live Kitchen Deg Batch Availability Bar */}
+          {/* Live Kitchen Deg Batch Availability Bar (Compact Space-Saving Strip) */}
           {isDegBatchActive && (
-            <div className="overflow-hidden rounded-2xl border border-primary/30 bg-card p-3.5 shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-border/60">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
-                    <Flame className="size-4" />
-                  </span>
-                  <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-foreground">
-                      Today's Fresh Kitchen Deg Batch
-                    </h4>
-                    <p className="text-[11px] text-muted-foreground">
-                      {liveBatch.platesLeft > 0 ? "Lunch Batch Active · Auto Decrements on Counter & Online Orders" : "Batch Sold Out · Next Cook Batch at 7:00 PM"}
-                    </p>
-                  </div>
-                </div>
+            <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/25 bg-card/90 px-3 py-1.5 shadow-2xs backdrop-blur-xs">
+              <div
+                onClick={() => setDegDetailsModalOpen(true)}
+                className="flex items-center gap-2 cursor-pointer group hover:opacity-90 transition-opacity"
+                title="Click to view full Kitchen Deg depletion breakdown & dish stats"
+              >
+                <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20 group-hover:scale-105 transition-transform shrink-0">
+                  <Flame className="size-3.5" />
+                </span>
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={openEditBatch}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3.5 py-1 text-xs font-black text-primary hover:bg-primary hover:text-white transition-all shadow-2xs"
-                    title={`Enter or update today's cooked batch quantity (Chicken & ${activeTenant.id === "spotlight-biriyani" || (activeTenant.businessName || "").toLowerCase().includes("spotlight") ? "Beef" : "Mutton"} Deg)`}
-                  >
-                    <Pencil className="size-3" />
-                    <span>Edit Deg Capacity</span>
-                  </button>
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ${liveBatch.platesLeft > 30
+                  <span className="text-xs font-black uppercase tracking-wider text-foreground">
+                    Today's Deg:
+                  </span>
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-black ${liveBatch.platesLeft > 30
                     ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
                     : liveBatch.platesLeft > 10
                       ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
                       : "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 animate-pulse"
                     }`}>
-                    <span className="size-2 rounded-full bg-current animate-ping" />
-                    {liveBatch.platesLeft > 0 ? `${liveBatch.platesLeft} Plates Left in Deg` : "SOLD OUT"}
+                    <span className="size-1.5 rounded-full bg-current animate-ping" />
+                    {liveBatch.platesLeft > 0 ? `${liveBatch.platesLeft} Plates Left` : "SOLD OUT"}
+                  </span>
+                  <span className="hidden sm:inline-flex items-center text-[11px] font-semibold text-muted-foreground">
+                    ({liveBatch.soldToday} of {liveBatch.cap} sold · {Math.round((liveBatch.soldToday / liveBatch.cap) * 100)}% consumed)
                   </span>
                 </div>
               </div>
 
-              {/* 3 Quick-Grip Visual Stats */}
-              <div className="mt-2.5 grid grid-cols-3 gap-2.5 text-center">
-                <div className="rounded-xl bg-muted/40 p-2 border border-border/50 text-center">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground block">Cooked in Deg</span>
-                  <span className="text-lg sm:text-xl font-black font-display text-foreground">{liveBatch.cap}</span>
-                  <span className="text-[10px] text-muted-foreground block">Plates</span>
-                </div>
-                <div className="rounded-xl bg-muted/40 p-2 border border-border/50">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground block">Sold Today</span>
-                  <span className="text-lg sm:text-xl font-black font-display text-primary">{liveBatch.soldToday}</span>
-                  <span className="text-[10px] text-muted-foreground block">Counter + Online</span>
-                </div>
-                <div className={`rounded-xl p-2 border ${liveBatch.platesLeft > 30
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
-                  : liveBatch.platesLeft > 10
-                    ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
-                    : "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400"
-                  }`}>
-                  <span className="text-[10px] font-black uppercase tracking-wider block">Remaining Stock</span>
-                  <span className="text-lg sm:text-xl font-black font-display">{liveBatch.platesLeft}</span>
-                  <span className="text-[10px] font-bold block">Plates Available</span>
-                </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setDegDetailsModalOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/40 hover:bg-muted px-2.5 py-1 text-xs font-bold text-foreground transition-all shadow-2xs active:scale-98"
+                  title="View full Deg depletion meter & dish breakdown"
+                >
+                  <span className="text-xs">📊</span>
+                  <span>View Deg Breakdown</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={openEditBatch}
+                  className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary hover:text-white px-2.5 py-1 text-xs font-bold text-primary transition-all shadow-2xs active:scale-98"
+                  title={`Enter or update today's cooked batch quantity (Chicken & ${activeTenant.id === "spotlight-biriyani" || (activeTenant.businessName || "").toLowerCase().includes("spotlight") ? "Beef" : "Mutton"} Deg)`}
+                >
+                  <Pencil className="size-3" />
+                  <span className="hidden xs:inline">Edit Capacity</span>
+                </button>
               </div>
-
-              {/* Visual Meter Bar */}
-              <div className="mt-2.5 space-y-1">
-                <div className="flex justify-between text-[10px] font-bold text-muted-foreground">
-                  <span>Depletion Rate: {liveBatch.soldToday} of {liveBatch.cap} plates sold</span>
-                  <span className="font-mono text-foreground font-black">{Math.round((liveBatch.soldToday / liveBatch.cap) * 100)}% Consumed</span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-muted border border-border/40">
-                  <div
-                    className={`h-full transition-all duration-500 rounded-full ${liveBatch.platesLeft > 30 ? "bg-emerald-500" : liveBatch.platesLeft > 10 ? "bg-amber-500" : "bg-rose-500"
-                      }`}
-                    style={{ width: `${Math.min(100, Math.round((liveBatch.soldToday / liveBatch.cap) * 100))}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Dynamic Deg Segment Breakdown per Tenant's actual Biriyani Dishes */}
-              {degDishesStats.length > 0 && (
-                <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/40 text-[11px]">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1 shrink-0">
-                    <Flame className="size-3 text-primary" /> Deg Breakdown:
-                  </span>
-                  {degDishesStats.map((dish) => (
-                    <span
-                      key={dish.id}
-                      className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 font-medium border border-border/40"
-                    >
-                      <span className="font-bold text-foreground">{dish.name}:</span>{" "}
-                      <span className={dish.sold > 0 ? "text-primary font-bold" : "text-muted-foreground font-semibold"}>
-                        {dish.sold} sold
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
           )}
 
@@ -2357,6 +2318,125 @@ function Billing() {
               >
                 Add to Bill
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Live Kitchen Deg Batch Breakdown & Stock Meter Pop-up Modal */}
+      {degDetailsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="surface-card w-full max-w-lg p-5 sm:p-6 animate-in zoom-in-95 relative border border-border shadow-2xl rounded-2xl">
+            <div className="flex items-center justify-between border-b border-border pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0">
+                  <Flame className="size-4.5" />
+                </span>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black font-display text-foreground uppercase tracking-wide">
+                    Today's Fresh Kitchen Deg Batch
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    {liveBatch.platesLeft > 0 ? "Lunch Batch Active · Auto Decrements on Counter & Online Orders" : "Batch Sold Out · Next Cook Batch at 7:00 PM"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDegDetailsModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground p-1.5 rounded-xl hover:bg-muted transition-colors"
+                title="Close Deg Meter"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              {/* 3 Quick-Grip Visual Stats */}
+              <div className="grid grid-cols-3 gap-2.5 text-center">
+                <div className="rounded-xl bg-muted/40 p-2.5 border border-border/50 text-center">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground block">Cooked in Deg</span>
+                  <span className="text-xl sm:text-2xl font-black font-display text-foreground">{liveBatch.cap}</span>
+                  <span className="text-[10px] text-muted-foreground block">Plates</span>
+                </div>
+                <div className="rounded-xl bg-muted/40 p-2.5 border border-border/50">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground block">Sold Today</span>
+                  <span className="text-xl sm:text-2xl font-black font-display text-primary">{liveBatch.soldToday}</span>
+                  <span className="text-[10px] text-muted-foreground block">Counter + Online</span>
+                </div>
+                <div className={`rounded-xl p-2.5 border ${
+                  liveBatch.platesLeft > 30
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                    : liveBatch.platesLeft > 10
+                      ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
+                      : "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400"
+                }`}>
+                  <span className="text-[10px] font-black uppercase tracking-wider block">Remaining Stock</span>
+                  <span className="text-xl sm:text-2xl font-black font-display">{liveBatch.platesLeft}</span>
+                  <span className="text-[10px] font-bold block">Plates Available</span>
+                </div>
+              </div>
+
+              {/* Visual Meter Bar */}
+              <div className="rounded-xl border border-border/60 bg-muted/30 p-3 space-y-1.5">
+                <div className="flex justify-between text-xs font-bold text-muted-foreground">
+                  <span>Depletion Progress: {liveBatch.soldToday} of {liveBatch.cap} plates sold</span>
+                  <span className="font-mono text-foreground font-black">{Math.round((liveBatch.soldToday / liveBatch.cap) * 100)}% Consumed</span>
+                </div>
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted border border-border/40">
+                  <div
+                    className={`h-full transition-all duration-500 rounded-full ${
+                      liveBatch.platesLeft > 30 ? "bg-emerald-500" : liveBatch.platesLeft > 10 ? "bg-amber-500" : "bg-rose-500"
+                    }`}
+                    style={{ width: `${Math.min(100, Math.round((liveBatch.soldToday / liveBatch.cap) * 100))}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Dynamic Deg Segment Breakdown per Tenant's actual Biriyani Dishes */}
+              {degDishesStats.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Flame className="size-3.5 text-primary" /> Today's Dish-by-Dish Consumption
+                  </span>
+                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                    {degDishesStats.map((dish) => (
+                      <div
+                        key={dish.id}
+                        className="flex items-center justify-between rounded-xl bg-muted/40 p-2.5 border border-border/40 text-xs"
+                      >
+                        <span className="font-bold text-foreground truncate pr-2">{dish.name}</span>
+                        <span className={`shrink-0 px-2 py-0.5 rounded-md font-bold text-[11px] ${
+                          dish.sold > 0 ? "bg-primary/10 text-primary border border-primary/20" : "bg-muted text-muted-foreground"
+                        }`}>
+                          {dish.sold} sold
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-3 border-t border-border/60 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDegDetailsModalOpen(false);
+                    openEditBatch();
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary hover:text-white px-3.5 py-2 text-xs font-bold text-primary transition-all shadow-2xs"
+                >
+                  <Pencil className="size-3.5" />
+                  <span>Edit Deg Capacity & Split</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDegDetailsModalOpen(false)}
+                  className="rounded-xl border border-border bg-card hover:bg-muted px-4 py-2 text-xs font-bold text-foreground transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

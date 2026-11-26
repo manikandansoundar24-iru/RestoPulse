@@ -16,100 +16,69 @@ const SIZE_MAP: Record<LogoSize, { box: string; iconSize: number; text: string }
 };
 
 /**
- * ⚡ RestoPulse SaaS Platform Logo:
- * A high-vibrancy, futuristic restaurant operating system emblem.
- * Features a radiant fiery gradient squircle with a gleaming white & molten gold
- * culinary cloche silhouette fused with an active real-time operational ECG pulse wave.
- * High-contrast, razor-sharp, and visually stunning in both light and dark modes.
+ * ⚡ RestoPulse Flagship SaaS Brand Logo (Concept P1 — Serving Cloche + Pulse):
+ * Rated "Best overall brand identity" in modern restaurant SaaS.
+ * - Rounded squircle base with rich coral-rose to warm orange gradient
+ * - Pure, razor-sharp white vector serving cloche dome with top knob handle
+ * - Dynamic integrated vital heartbeat / pulse wave surging through the cloche
+ * - Clean serving platter base line
+ * Ultra-crisp, elegant, and high-contrast in both dark and light modes.
  */
 export function RestoPulseLogo({ size = "md", className = "" }: LogoProps) {
   const s = SIZE_MAP[size];
   return (
     <span
-      className={`relative inline-flex items-center justify-center shrink-0 rounded-xl bg-gradient-to-tr from-rose-600 via-orange-500 to-amber-300 p-[1.5px] shadow-lg shadow-orange-500/25 group-hover:scale-105 group-hover:shadow-orange-500/40 transition-all duration-300 ${s.box} ${className}`}
+      className={`relative inline-flex items-center justify-center shrink-0 rounded-xl bg-gradient-to-br from-rose-500 via-rose-600 to-orange-500 p-[1.5px] shadow-md shadow-rose-500/25 group-hover:scale-105 group-hover:shadow-rose-500/40 transition-all duration-300 ${s.box} ${className}`}
       title="RestoPulse Cloud POS & Enterprise Restaurant OS"
     >
-      <span className="flex size-full items-center justify-center rounded-[10px] bg-gradient-to-br from-amber-500 via-orange-600 to-rose-600 overflow-hidden relative shadow-inner">
-        {/* Luminous Glass Sheen Layer */}
-        <span className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/25 pointer-events-none" />
+      <span className="flex size-full items-center justify-center rounded-[10px] bg-gradient-to-br from-rose-500 via-rose-600 to-orange-500 overflow-hidden relative shadow-inner">
+        {/* Subtle glass sheen layer */}
+        <span className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/20 pointer-events-none" />
 
         <svg
-          viewBox="0 0 36 36"
+          viewBox="0 0 40 40"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="size-[86%] relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
+          className="size-[84%] relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
         >
-          {/* Subtle culinary steam wisps */}
+          {/* Top Cloche Finial Handle */}
+          <circle cx="20" cy="8" r="2.2" fill="#FFFFFF" />
+
+          {/* Elegant Serving Cloche Dome */}
           <path
-            d="M13.5 5.5C13 4 14 3 13.5 2"
+            d="M8 23 C8 13.5 13.5 10.5 20 10.5 C26.5 10.5 32 13.5 32 23"
             stroke="#FFFFFF"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            opacity="0.8"
-          />
-          <path
-            d="M18 5C17.5 3.5 18.5 2.5 18 1.5"
-            stroke="#FFE600"
-            strokeWidth="1.4"
-            strokeLinecap="round"
-          />
-          <path
-            d="M22.5 5.5C22 4 23 3 22.5 2"
-            stroke="#FFFFFF"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            opacity="0.8"
-          />
-
-          {/* Cloche Finial Handle */}
-          <circle cx="18" cy="7.5" r="2" fill="#FFFFFF" />
-
-          {/* Gleaming White Culinary Cloche Dome */}
-          <path
-            d="M8.5 22C8.5 14.5 12.5 10.5 18 10.5C23.5 10.5 27.5 14.5 27.5 22H8.5Z"
-            fill="#FFFFFF"
-            fillOpacity="0.95"
-          />
-
-          {/* Inner Cloche Depth Arc */}
-          <path
-            d="M11 20.5C12 16 14.8 13 18 13C21.2 13 24 16 25 20.5"
-            stroke="#FFE600"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            opacity="0.85"
-          />
-
-          {/* High-Tech Pulse Baseline & Dynamic ECG Heartbeat Wave */}
-          {/* Shadow track for maximum pop */}
-          <path
-            d="M3.5 26.5H10.5L13.5 18L17.5 31.5L21 16L24 26.5H32.5"
-            stroke="#8B0000"
-            strokeWidth="3.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity="0.35"
-          />
-          {/* Radiant Gold Energy Pulse Wave */}
-          <path
-            d="M3.5 26.5H10.5L13.5 18L17.5 31.5L21 16L24 26.5H32.5"
-            stroke="#FFE600"
             strokeWidth="2.4"
             strokeLinecap="round"
-            strokeLinejoin="round"
           />
-          {/* White High-Voltage Core Line */}
+
+          {/* Platter Rim / Serving Base */}
           <path
-            d="M3.5 26.5H10.5L13.5 18L17.5 31.5L21 16L24 26.5H32.5"
+            d="M5.5 26.5 H34.5"
             stroke="#FFFFFF"
-            strokeWidth="1.1"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+          />
+
+          {/* Heart / Vital Core Center Accent */}
+          <path
+            d="M20 16.5 C18.8 14.5 15.8 14.8 15.8 17.5 C15.8 20 20 22.8 20 22.8 C20 22.8 24.2 20 24.2 17.5 C24.2 14.8 21.2 14.5 20 16.5 Z"
+            fill="#FFFFFF"
+            fillOpacity="0.22"
+            stroke="#FFFFFF"
+            strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
 
-          {/* Pulse Signal Beat Dots */}
-          <circle cx="17.5" cy="31.5" r="1.4" fill="#FFFFFF" />
-          <circle cx="21" cy="16" r="1.4" fill="#FFE600" />
+          {/* Dynamic Real-Time ECG Heartbeat / Kitchen Pulse Wave */}
+          <path
+            d="M10 20 H14.5 L17 16.5 L19.8 22.8 L22.2 15 L24.5 20 H30"
+            stroke="#FFFFFF"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </span>
     </span>

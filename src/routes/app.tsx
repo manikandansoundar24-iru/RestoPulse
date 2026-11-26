@@ -216,9 +216,7 @@ function AppLayout() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center gap-3">
-          <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary animate-pulse">
-            <Flame className="size-6 text-primary" />
-          </span>
+          <RestoPulseLogo size="lg" className="animate-pulse" />
           <p className="text-xs font-bold tracking-wider uppercase text-muted-foreground">Authenticating Terminal...</p>
         </div>
       </div>
@@ -232,9 +230,7 @@ function AppLayout() {
           /* DEVELOPER SUPER-ADMIN TOP BAR (Isolated from restaurant operations) */
           <div className="mx-auto max-w-7xl flex items-center justify-between gap-3 px-3 sm:px-6 lg:px-8 h-14">
             <div className="flex items-center gap-3 min-w-0">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-tr from-red-600 via-orange-600 to-amber-500 shadow-md text-white font-black shrink-0">
-                <ShieldAlert className="size-5" />
-              </span>
+              <RestoPulseLogo size="sm" />
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="font-display font-black text-sm sm:text-base tracking-wide leading-none text-foreground truncate">
