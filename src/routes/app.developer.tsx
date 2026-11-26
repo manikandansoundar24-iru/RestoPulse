@@ -853,8 +853,8 @@ export function DeveloperSuperAdminPage() {
                 type="button"
                 onClick={() => handleBrandChange(b.name)}
                 className={`flex flex-col text-left p-3.5 rounded-2xl border transition-all ${isSelected
-                    ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary"
-                    : "border-border/70 bg-muted/20 hover:border-primary/50 hover:bg-muted/40"
+                  ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary"
+                  : "border-border/70 bg-muted/20 hover:border-primary/50 hover:bg-muted/40"
                   }`}
               >
                 <div className="flex items-center justify-between">
@@ -925,8 +925,8 @@ export function DeveloperSuperAdminPage() {
                 key={t.id}
                 onClick={() => handleSelectClient(t.id)}
                 className={`relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${isSelected
-                    ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/40"
-                    : "border-border/70 bg-card hover:border-primary/40 hover:bg-muted/30"
+                  ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/40"
+                  : "border-border/70 bg-card hover:border-primary/40 hover:bg-muted/30"
                   }`}
               >
                 <div>
@@ -986,8 +986,8 @@ export function DeveloperSuperAdminPage() {
                         toast.info(`Configuring features for ${t.businessName}`);
                       }}
                       className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs ${isSelected
-                          ? "bg-primary text-white shadow-md ring-1 ring-primary/40"
-                          : "border border-primary/30 bg-primary/10 text-primary hover:bg-primary hover:text-white"
+                        ? "bg-primary text-white shadow-md ring-1 ring-primary/40"
+                        : "border border-primary/30 bg-primary/10 text-primary hover:bg-primary hover:text-white"
                         }`}
                     >
                       <Sliders className="size-3.5" />
@@ -1102,8 +1102,8 @@ export function DeveloperSuperAdminPage() {
                   type="button"
                   onClick={() => setSelectedBranchScope("all")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${selectedBranchScope === "all"
-                      ? "bg-primary text-white shadow-2xs"
-                      : "bg-card border border-border text-muted-foreground hover:text-foreground"
+                    ? "bg-primary text-white shadow-2xs"
+                    : "bg-card border border-border text-muted-foreground hover:text-foreground"
                     }`}
                 >
                   🏢 All Branches (Default Plan)
@@ -1116,8 +1116,8 @@ export function DeveloperSuperAdminPage() {
                       type="button"
                       onClick={() => setSelectedBranchScope(b.id)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${selectedBranchScope === b.id
-                          ? "bg-primary text-white shadow-2xs"
-                          : "bg-card border border-border text-muted-foreground hover:text-foreground"
+                        ? "bg-primary text-white shadow-2xs"
+                        : "bg-card border border-border text-muted-foreground hover:text-foreground"
                         }`}
                     >
                       <span>📍 {b.name}</span>

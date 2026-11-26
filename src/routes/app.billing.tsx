@@ -1404,6 +1404,27 @@ function Billing() {
     return sanitized.filter((i) => (cat === "all" ? true : normalizeCategory(i.category) === cat) && i.active);
   }, [tenantItems, cat]);
 
+  // Frequently paired add-ons from other categories to fill empty space and boost upsells
+  const quickAddons = useMemo(() => {
+    if (cat === "all") return [];
+    const sanitized = sanitizeAndDeduplicateItems(tenantItems);
+    const otherItems = sanitized.filter((i) => normalizeCategory(i.category) !== cat && i.active);
+
+    return otherItems
+      .sort((a, b) => {
+        const catA = normalizeCategory(a.category);
+        const catB = normalizeCategory(b.category);
+        const score = (c: string) => {
+          if (cat === "biryani" || cat === "kushka") {
+            return c === "starters" ? 4 : c === "beverages" ? 3 : c === "breads" ? 2 : 1;
+          }
+          return c === "biryani" ? 4 : c === "starters" ? 3 : c === "beverages" ? 2 : 1;
+        };
+        return score(catB) - score(catA);
+      })
+      .slice(0, 6);
+  }, [tenantItems, cat]);
+
   // Cash change computation
   const tenderNum = Number(cashTendered) || 0;
   const netDue = preview?.net ?? 0;
@@ -1642,147 +1663,194 @@ function Billing() {
                 );
               })}
             </div>
+
+            {/* Quick-Add Addons & Frequently Paired Dishes (Fills empty bottom space and boosts speed) */}
+            {cat !== "all" && quickAddons.length > 0 && (
+              <div className="mt-5 border-t border-border/60 pt-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="size-3.5 text-amber-500" />
+                    <span>Frequently Paired Add-ons ({cat === "biryani" ? "Starters, Breads & Drinks" : "Popular Dishes"})</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCat("all")}
+                    className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
+                  >
+                    <span>View All Menu</span>
+                    <span>➔</span>
+                  </button>
+                </div>
+                <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                  {quickAddons.map((i) => {
+                    const inCart = lines.find((l) => l.itemId === i.id);
+                    return (
+                      <DishCard
+                        key={i.id}
+                        item={i}
+                        price={priceFor(i.id)}
+                        inCartLine={inCart}
+                        liveBatch={liveBatch}
+                        degBatchEnabled={isDegBatchActive}
+                        canIncreaseDeg={!isDegItem(i) || currentCartDegPlates < liveBatch.platesLeft}
+                        onAdd={() => add(i.id)}
+                        onStep={(d) => step(i.id, d)}
+                        onUpdateQty={(val) => updateQty(i.id, val)}
+                        onBlurQty={() => handleQtyBlur(i.id)}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Cart / Order Summary (Sticky on Tablet & Desktop) */}
-        <aside id="pos-cart" className="surface-card h-fit p-4 lg:p-5 md:sticky md:top-20 w-full min-w-0 max-w-full overflow-hidden">
-          {/* Order Service Type Toggle (Dine-in vs Takeaway/Parcel) */}
-          <div className="flex gap-1.5 rounded-xl border border-border bg-card p-1 text-xs mb-2.5 shadow-2xs">
-            <button
-              type="button"
-              onClick={() => setOrderType("dinein")}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 font-bold transition-all ${orderType === "dinein"
-                ? "bg-primary text-white shadow-xs"
-                : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
-              🍽️ Dine-in
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setOrderType("takeaway");
-                setSelectedTableId(null);
-                setLines([]);
-                setQuickPhone("");
-                setOrderNote("");
-              }}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 font-bold transition-all ${orderType === "takeaway"
-                ? "bg-amber-600 text-white shadow-xs"
-                : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
-              🥡 Takeaway / Parcel
-            </button>
-          </div>
-
-          {/* Dine-in Interactive Floor Plan & Table Bar */}
-          {orderType === "dinein" && activeModules.tables && (
-            <div className="mb-2.5">
-              {selectedTableId ? (
-                (() => {
-                  const tbl = (db.tables || DEFAULT_TABLES).find((t) => t.id === selectedTableId);
-                  const isOccupied = tbl?.status === "occupied";
-                  return (
-                    <div className="rounded-xl border border-primary/40 bg-primary/5 p-2.5 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="min-w-0 pr-2">
-                          <span className="font-black text-xs text-foreground block truncate">
-                            🍽️ {tbl?.name || `Table ${selectedTableId}`}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground block truncate">
-                            Capacity: {tbl?.capacity || 4} Guests · {tbl?.section?.toUpperCase() || "MAIN HALL"} · {isOccupied ? "Running Tab" : "New Tab"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => setTableFloorModalOpen(true)}
-                            className="px-2 py-1 rounded-lg border border-border bg-card hover:bg-muted text-[10px] font-bold text-foreground transition-colors"
-                          >
-                            Switch Table
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedTableId(null);
-                              setLines([]);
-                              setQuickPhone("");
-                              setOrderNote("");
-                            }}
-                            className="p-1 text-muted-foreground hover:text-destructive transition-colors"
-                            title="Deselect table"
-                          >
-                            <X className="size-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-1 border-t border-border/60">
-                        <button
-                          type="button"
-                          disabled={!preview || preview.lines.length === 0}
-                          onClick={() => {
-                            if (!preview) return;
-                            const currentTable = (db.tables || DEFAULT_TABLES).find((t) => t.id === selectedTableId);
-                            setTableOrder(selectedTableId, preview.lines, quickPhone, orderNote);
-                            printKOT(selectedTableId, currentTable?.name || selectedTableId, preview.lines, orderNote);
-                            addKdsOrder({
-                              id: `kot_${selectedTableId}_${Date.now()}`,
-                              tokenNum: todayToken,
-                              tableId: selectedTableId,
-                              orderType: "dinein",
-                              channel,
-                              tenantId: activeTenant.id,
-                              lines: preview.lines.map((l) => ({ name: l.name, qty: l.qty })),
-                              notes: orderNote,
-                            });
-                            playChime("print", soundStyle);
-                            toast.success(`KOT sent to Kitchen for ${selectedTableId}! Table is now OCCUPIED. Cart cleared for next order.`);
-                            setLines([]);
-                            setDiscount(0);
-                            setCashTendered("");
-                            setSelectedTableId(null);
-                          }}
-                          className="w-full rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold py-1.5 text-xs flex items-center justify-center gap-1.5 shadow-2xs disabled:opacity-40 transition-all active:scale-98"
-                        >
-                          <Flame className="size-3.5" /> Send KOT to Kitchen &amp; Hold Tab
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })()
-              ) : (
+        <aside id="pos-cart" className="surface-card h-fit p-3.5 sm:p-4 lg:p-5 md:sticky md:top-20 w-full min-w-0 max-w-full overflow-hidden">
+          {/* Executive Compact Unified Header: Order Mode + Channel Switcher */}
+          <div className="space-y-2 mb-2.5 pb-2 border-b border-border/60">
+            <div className="flex items-center justify-between gap-1.5 flex-wrap">
+              {/* Sleek Dine-in vs Takeaway Segment */}
+              <div className="inline-flex rounded-xl border border-border bg-muted/40 p-0.5 text-xs shadow-2xs">
                 <button
                   type="button"
-                  onClick={() => setTableFloorModalOpen(true)}
-                  className="w-full flex items-center justify-between rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 p-2.5 text-xs font-bold text-primary transition-all group shadow-2xs"
+                  onClick={() => setOrderType("dinein")}
+                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${orderType === "dinein"
+                    ? "bg-primary text-white shadow-2xs"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <Utensils className="size-4 text-primary group-hover:scale-110 transition-transform" />
-                    <span>Select Dine-In Table / Floor Plan</span>
-                  </span>
-                  <span className="text-xs group-hover:translate-x-0.5 transition-transform">➔</span>
+                  <span className="text-xs">🍽️</span>
+                  <span>Dine-in</span>
                 </button>
-              )}
-            </div>
-          )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrderType("takeaway");
+                    setSelectedTableId(null);
+                    setLines([]);
+                    setQuickPhone("");
+                    setOrderNote("");
+                  }}
+                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${orderType === "takeaway"
+                    ? "bg-amber-600 text-white shadow-2xs"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                  <span className="text-xs">🥡</span>
+                  <span>Takeaway</span>
+                </button>
+              </div>
 
-          {/* Channel Switcher */}
-          <div className="flex gap-1 rounded-xl border border-border bg-muted/60 p-1">
-            {db.channels.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => changeChannel(c.id)}
-                className={`flex-1 rounded-lg px-2 py-1.5 text-xs font-bold transition-all ${channel === c.id
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-                  }`}
-              >
-                {c.id === "counter" ? "Counter / Dine-in" : c.name}
-              </button>
-            ))}
+              {/* Sleek Channel Switcher (Counter, Swiggy, Zomato) */}
+              <div className="inline-flex rounded-xl border border-border bg-muted/40 p-0.5 text-xs shadow-2xs">
+                {db.channels.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => changeChannel(c.id)}
+                    className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all ${channel === c.id
+                      ? "bg-foreground text-background shadow-2xs"
+                      : "text-muted-foreground hover:text-foreground"
+                      }`}
+                  >
+                    {c.id === "counter" ? "Counter" : c.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dine-in Interactive Floor Plan & Table Bar */}
+            {orderType === "dinein" && activeModules.tables && (
+              <div>
+                {selectedTableId ? (
+                  (() => {
+                    const tbl = (db.tables || DEFAULT_TABLES).find((t) => t.id === selectedTableId);
+                    const isOccupied = tbl?.status === "occupied";
+                    return (
+                      <div className="rounded-xl border border-primary/40 bg-primary/5 p-2.5 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0 pr-2">
+                            <span className="font-black text-xs text-foreground block truncate">
+                              🍽️ {tbl?.name || `Table ${selectedTableId}`}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground block truncate">
+                              Capacity: {tbl?.capacity || 4} Guests · {tbl?.section?.toUpperCase() || "MAIN HALL"} · {isOccupied ? "Running Tab" : "New Tab"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => setTableFloorModalOpen(true)}
+                              className="px-2 py-1 rounded-lg border border-border bg-card hover:bg-muted text-[10px] font-bold text-foreground transition-colors"
+                            >
+                              Switch Table
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedTableId(null);
+                                setLines([]);
+                                setQuickPhone("");
+                                setOrderNote("");
+                              }}
+                              className="p-1 text-muted-foreground hover:text-destructive transition-colors"
+                              title="Deselect table"
+                            >
+                              <X className="size-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1 border-t border-border/60">
+                          <button
+                            type="button"
+                            disabled={!preview || preview.lines.length === 0}
+                            onClick={() => {
+                              if (!preview) return;
+                              const currentTable = (db.tables || DEFAULT_TABLES).find((t) => t.id === selectedTableId);
+                              setTableOrder(selectedTableId, preview.lines, quickPhone, orderNote);
+                              printKOT(selectedTableId, currentTable?.name || selectedTableId, preview.lines, orderNote);
+                              addKdsOrder({
+                                id: `kot_${selectedTableId}_${Date.now()}`,
+                                tokenNum: todayToken,
+                                tableId: selectedTableId,
+                                orderType: "dinein",
+                                channel,
+                                tenantId: activeTenant.id,
+                                lines: preview.lines.map((l) => ({ name: l.name, qty: l.qty })),
+                                notes: orderNote,
+                              });
+                              playChime("print", soundStyle);
+                              toast.success(`KOT sent to Kitchen for ${selectedTableId}! Table is now OCCUPIED. Cart cleared for next order.`);
+                              setLines([]);
+                              setDiscount(0);
+                              setCashTendered("");
+                              setSelectedTableId(null);
+                            }}
+                            className="w-full rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold py-1.5 text-xs flex items-center justify-center gap-1.5 shadow-2xs disabled:opacity-40 transition-all active:scale-98"
+                          >
+                            <Flame className="size-3.5" /> Send KOT to Kitchen &amp; Hold Tab
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setTableFloorModalOpen(true)}
+                    className="w-full flex items-center justify-between rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 p-2.5 text-xs font-bold text-primary transition-all group shadow-2xs"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Utensils className="size-4 text-primary group-hover:scale-110 transition-transform" />
+                      <span>Select Dine-In Table / Floor Plan</span>
+                    </span>
+                    <span className="text-xs group-hover:translate-x-0.5 transition-transform">➔</span>
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Active Bill Correction Banner */}
@@ -1808,12 +1876,20 @@ function Billing() {
             </div>
           )}
 
-          {/* Cart items list */}
+          {/* Cart items list or clean empty state */}
           {lines.length === 0 ? (
-            <div className="mt-8 flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
-              <Ticket className="size-8 opacity-30" />
-              <p className="mt-2 text-sm font-medium">Cart is empty</p>
-              <p className="text-xs text-muted-foreground/80">Tap dishes on the left to build the bill.</p>
+            <div className="py-6 my-2 flex flex-col items-center justify-center text-center text-muted-foreground border border-dashed border-border/70 rounded-2xl bg-muted/10 p-4">
+              <div className="size-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-2">
+                <Ticket className="size-5.5 opacity-80" />
+              </div>
+              <p className="text-xs sm:text-sm font-black text-foreground">Cart is Empty</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[220px]">
+                Tap any dish on the left to add items to this customer's bill.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
+                <span className="rounded-md bg-muted/80 border border-border/50 px-2 py-0.5 font-mono font-bold">F2 Quick Pay</span>
+                <span className="rounded-md bg-muted/80 border border-border/50 px-2 py-0.5">Cash · UPI · Card</span>
+              </div>
             </div>
           ) : (
             <div className="mt-4">
@@ -2102,7 +2178,9 @@ function Billing() {
                 }`}
               title={`Save order (${payment.toUpperCase()}) and print thermal paper receipt (Shortcut: Press F2)`}
             >
-              {payment === "upi" ? (
+              {!preview ? (
+                <Utensils className="size-4 sm:size-5 shrink-0 opacity-60" />
+              ) : payment === "upi" ? (
                 <Smartphone className="size-4 sm:size-5 shrink-0" />
               ) : payment === "card" ? (
                 <CreditCard className="size-4 sm:size-5 shrink-0" />
@@ -2112,47 +2190,51 @@ function Billing() {
                 <Printer className="size-4 sm:size-5 shrink-0" />
               )}
               <span>
-                {editingSaleId
-                  ? "UPDATE & RE-PRINT BILL"
-                  : payment === "upi"
-                    ? "UPI RECEIVED & PRINT (F2)"
-                    : payment === "card"
-                      ? "CARD CHARGED & PRINT (F2)"
-                      : payment === "online"
-                        ? "ONLINE ORDER & PRINT (F2)"
-                        : "SAVE BILL & PRINT (CASH) - F2"}
+                {!preview
+                  ? "TAP DISHES TO BUILD BILL"
+                  : editingSaleId
+                    ? "UPDATE & RE-PRINT BILL"
+                    : payment === "upi"
+                      ? "UPI RECEIVED & PRINT (F2)"
+                      : payment === "card"
+                        ? "CARD CHARGED & PRINT (F2)"
+                        : payment === "online"
+                          ? "ONLINE ORDER & PRINT (F2)"
+                          : "SAVE BILL & PRINT (CASH) - F2"}
               </span>
             </button>
 
-            {/* Inline Quick WhatsApp Row (Non-intrusive for counter rush) */}
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-1.5 shadow-2xs">
-              <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 pl-1 shrink-0 flex items-center gap-1">
-                <MessageSquare className="size-3.5 text-emerald-600" /> WhatsApp:
-              </span>
-              <input
-                type="tel"
-                placeholder="10-digit mobile (optional)"
-                value={quickPhone}
-                onChange={(e) => setQuickPhone(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && preview) {
-                    e.preventDefault();
-                    handleQuickWhatsApp();
-                  }
-                }}
-                className="h-8 flex-1 min-w-0 rounded-lg border border-border bg-card px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none"
-              />
-              <button
-                type="button"
-                disabled={!preview}
-                onClick={handleQuickWhatsApp}
-                className="h-8 shrink-0 flex items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-2xs"
-                title="Save bill and send WhatsApp receipt"
-              >
-                <Send className="size-3 shrink-0" />
-                <span>Send</span>
-              </button>
-            </div>
+            {/* Inline Quick WhatsApp Row (Only when cart has items) */}
+            {preview && (
+              <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-1.5 shadow-2xs">
+                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 pl-1 shrink-0 flex items-center gap-1">
+                  <MessageSquare className="size-3.5 text-emerald-600" /> WhatsApp:
+                </span>
+                <input
+                  type="tel"
+                  placeholder="10-digit mobile (optional)"
+                  value={quickPhone}
+                  onChange={(e) => setQuickPhone(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && preview) {
+                      e.preventDefault();
+                      handleQuickWhatsApp();
+                    }
+                  }}
+                  className="h-8 flex-1 min-w-0 rounded-lg border border-border bg-card px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  disabled={!preview}
+                  onClick={handleQuickWhatsApp}
+                  className="h-8 shrink-0 flex items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-2xs"
+                  title="Save bill and send WhatsApp receipt"
+                >
+                  <Send className="size-3 shrink-0" />
+                  <span>Send</span>
+                </button>
+              </div>
+            )}
 
             {/* VIP Regular Loyalty Banner */}
             {customerLoyalty && activeTenant.enabledModules.loyalty && customerLoyalty.visitCount > 0 && (
