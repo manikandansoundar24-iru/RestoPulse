@@ -306,6 +306,7 @@ function DishCard({
   price,
   canIncreaseDeg,
   degBatchEnabled = false,
+  isAdaptive = false,
   onAdd,
   onStep,
   onUpdateQty,
@@ -317,6 +318,7 @@ function DishCard({
   price: number;
   canIncreaseDeg: boolean;
   degBatchEnabled?: boolean;
+  isAdaptive?: boolean;
   onAdd: () => void;
   onStep: (delta: number) => void;
   onUpdateQty: (val: string) => void;
@@ -360,7 +362,7 @@ function DishCard({
 
   return (
     <div
-      className={`surface-card group relative p-2 sm:p-2.5 text-left transition-all min-w-0 max-w-full overflow-hidden flex flex-col justify-between ${isSoldOut
+      className={`surface-card group relative ${isAdaptive ? "p-3 sm:p-4 min-h-[105px]" : "p-2 sm:p-2.5"} text-left transition-all min-w-0 max-w-full overflow-hidden flex flex-col justify-between ${isSoldOut
         ? "opacity-60 bg-muted/20 border-border/40"
         : isInCart
           ? "border-primary/90 bg-primary/5 shadow-ember"
@@ -373,12 +375,12 @@ function DishCard({
         title={isSoldOut ? (!item.active ? "Item marked Off Menu" : "Batch Sold Out") : "Click to add to bill"}
       >
         <div>
-          <p className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+          <p className={`${isAdaptive ? "text-sm sm:text-base font-bold" : "text-xs sm:text-sm font-bold"} text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight`}>
             {item.name}
           </p>
           {isDeg && (
             <span
-              className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.2 text-[9px] font-bold ${liveBatch.platesLeft > 30
+              className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.2 ${isAdaptive ? "text-[10px]" : "text-[9px]"} font-bold ${liveBatch.platesLeft > 30
                 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                 : liveBatch.platesLeft > 10
                   ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
@@ -391,7 +393,7 @@ function DishCard({
           )}
         </div>
         <div className="mt-1 flex items-baseline justify-between">
-          <p className="font-display text-base sm:text-lg font-black text-primary">{inr(price)}</p>
+          <p className={`font-display ${isAdaptive ? "text-lg sm:text-xl" : "text-base sm:text-lg"} font-black text-primary`}>{inr(price)}</p>
         </div>
       </div>
 
@@ -464,6 +466,7 @@ function Billing() {
   const isDegBatchActive = isDegBatchActiveForTenant(activeTenant, activeBranchId);
   const [salesTick, setSalesTick] = useState(0);
   const [cat, setCat] = useState<Category | "all">("biryani");
+  const [addonsMode, setAddonsMode] = useState<"strip" | "cards" | "categories" | "off">("strip");
   const [lines, setLines] = useState<SaleLine[]>([]);
   const [channel, setChannel] = useState<ChannelId>("counter");
   const [discount, setDiscount] = useState(0);
@@ -1642,47 +1645,18 @@ function Billing() {
               </div>
             </div>
 
-            {/* Dishes Grid (Top Tabs Mode: 3 to 6 Columns for compact touch tiles) */}
-            <div className="mt-2.5 grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-              {items.map((i) => {
-                const inCart = lines.find((l) => l.itemId === i.id);
-                return (
-                  <DishCard
-                    key={i.id}
-                    item={i}
-                    price={priceFor(i.id)}
-                    inCartLine={inCart}
-                    liveBatch={liveBatch}
-                    degBatchEnabled={isDegBatchActive}
-                    canIncreaseDeg={!isDegItem(i) || currentCartDegPlates < liveBatch.platesLeft}
-                    onAdd={() => add(i.id)}
-                    onStep={(d) => step(i.id, d)}
-                    onUpdateQty={(val) => updateQty(i.id, val)}
-                    onBlurQty={() => handleQtyBlur(i.id)}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Quick-Add Addons & Frequently Paired Dishes (Fills empty bottom space and boosts speed) */}
-            {cat !== "all" && quickAddons.length > 0 && (
-              <div className="mt-5 border-t border-border/60 pt-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <Sparkles className="size-3.5 text-amber-500" />
-                    <span>Frequently Paired Add-ons ({cat === "biryani" ? "Starters, Breads & Drinks" : "Popular Dishes"})</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setCat("all")}
-                    className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
-                  >
-                    <span>View All Menu</span>
-                    <span>➔</span>
-                  </button>
-                </div>
-                <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-                  {quickAddons.map((i) => {
+            {/* Dishes Grid: Adaptive Sizing for Small vs Large Categories */}
+            {(() => {
+              const isSmallCategory = cat !== "all" && items.length <= 6;
+              return (
+                <div
+                  className={`mt-2.5 grid ${
+                    isSmallCategory
+                      ? "gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"
+                      : "gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
+                  }`}
+                >
+                  {items.map((i) => {
                     const inCart = lines.find((l) => l.itemId === i.id);
                     return (
                       <DishCard
@@ -1692,6 +1666,7 @@ function Billing() {
                         inCartLine={inCart}
                         liveBatch={liveBatch}
                         degBatchEnabled={isDegBatchActive}
+                        isAdaptive={isSmallCategory}
                         canIncreaseDeg={!isDegItem(i) || currentCartDegPlates < liveBatch.platesLeft}
                         onAdd={() => add(i.id)}
                         onStep={(d) => step(i.id, d)}
@@ -1701,6 +1676,176 @@ function Billing() {
                     );
                   })}
                 </div>
+              );
+            })()}
+
+            {/* Multi-Option Addons & Cross-sell Section */}
+            {cat !== "all" && (
+              <div className="mt-5 border-t border-border/60 pt-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="size-3.5 text-amber-500" />
+                    <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                      {addonsMode === "categories"
+                        ? "Quick Category Jump"
+                        : addonsMode === "off"
+                        ? "Paired Add-ons"
+                        : `Frequently Paired Add-ons (${cat === "biryani" ? "Starters, Breads & Drinks" : "Popular Dishes"})`}
+                    </span>
+                  </div>
+
+                  {/* Interactive Layout Switcher: Strip | Cards | Categories | Off */}
+                  <div className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5 text-[11px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setAddonsMode("strip")}
+                      className={`px-2 py-0.5 rounded transition-all ${
+                        addonsMode === "strip"
+                          ? "bg-primary text-white shadow-2xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      title="Compact 1-Tap Quick Upsell Strip"
+                    >
+                      ⚡ 1-Tap Strip
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAddonsMode("cards")}
+                      className={`px-2 py-0.5 rounded transition-all ${
+                        addonsMode === "cards"
+                          ? "bg-primary text-white shadow-2xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      title="Full Dish Card Grid"
+                    >
+                      ▦ Card Grid
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAddonsMode("categories")}
+                      className={`px-2 py-0.5 rounded transition-all ${
+                        addonsMode === "categories"
+                          ? "bg-primary text-white shadow-2xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      title="Category Switcher Cards"
+                    >
+                      🗂️ Categories
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAddonsMode("off")}
+                      className={`px-1.5 py-0.5 rounded transition-all ${
+                        addonsMode === "off"
+                          ? "bg-foreground text-background shadow-2xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      title="Hide Add-ons Section"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                {/* 1. Strip Mode: Sleek, Ultra-Fast 1-Tap Chips */}
+                {addonsMode === "strip" && (
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar">
+                    {quickAddons.map((item) => {
+                      const inCart = lines.find((l) => l.itemId === item.id);
+                      const price = priceFor(item.id);
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => add(item.id)}
+                          className={`shrink-0 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-all ${
+                            inCart
+                              ? "border-primary bg-primary/10 text-primary shadow-2xs"
+                              : "border-border bg-card hover:border-primary/50 hover:bg-muted text-foreground"
+                          }`}
+                          title={`Add ${item.name} (${inr(price)})`}
+                        >
+                          <span className="text-amber-500 font-black">+</span>
+                          <span>{item.name}</span>
+                          <span className="text-[11px] font-black text-primary">{inr(price)}</span>
+                          {inCart && (
+                            <span className="ml-0.5 rounded-full bg-primary px-1.5 py-0.2 text-[9px] font-black text-white">
+                              {inCart.qty}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* 2. Full Cards Grid Mode */}
+                {addonsMode === "cards" && (
+                  <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                    {quickAddons.map((i) => {
+                      const inCart = lines.find((l) => l.itemId === i.id);
+                      return (
+                        <DishCard
+                          key={i.id}
+                          item={i}
+                          price={priceFor(i.id)}
+                          inCartLine={inCart}
+                          liveBatch={liveBatch}
+                          degBatchEnabled={isDegBatchActive}
+                          canIncreaseDeg={!isDegItem(i) || currentCartDegPlates < liveBatch.platesLeft}
+                          onAdd={() => add(i.id)}
+                          onStep={(d) => step(i.id, d)}
+                          onUpdateQty={(val) => updateQty(i.id, val)}
+                          onBlurQty={() => handleQtyBlur(i.id)}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* 3. Category Jump Cards Mode */}
+                {addonsMode === "categories" && (
+                  <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                    {allCategories
+                      .filter((c) => c.id !== cat && c.id !== "all")
+                      .slice(0, 4)
+                      .map((c) => {
+                        const count = categoryItemCounts[c.id] || 0;
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => setCat(c.id)}
+                            className="flex items-center justify-between p-3 rounded-xl border border-border bg-card/80 hover:border-primary hover:bg-primary/5 hover:shadow-card transition-all text-left group"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="p-2 rounded-lg bg-muted text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                                {renderCategoryIcon(c.id, "size-4")}
+                              </span>
+                              <div className="min-w-0">
+                                <span className="block font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">
+                                  {c.label}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {count} items
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-muted-foreground group-hover:text-primary transition-colors text-xs font-black">
+                              ➔
+                            </span>
+                          </button>
+                        );
+                      })}
+                  </div>
+                )}
+
+                {/* 4. Off Mode */}
+                {addonsMode === "off" && (
+                  <p className="text-xs text-muted-foreground italic py-1">
+                    Add-ons hidden. Switch to ⚡ 1-Tap Strip or ▦ Card Grid above to view paired recommendations.
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -1709,56 +1854,58 @@ function Billing() {
         {/* Cart / Order Summary (Sticky on Tablet & Desktop) */}
         <aside id="pos-cart" className="surface-card h-fit p-3.5 sm:p-4 lg:p-5 md:sticky md:top-20 w-full min-w-0 max-w-full overflow-hidden">
           {/* Executive Compact Unified Header: Order Mode + Channel Switcher */}
-          <div className="space-y-2 mb-2.5 pb-2 border-b border-border/60">
-            <div className="flex items-center justify-between gap-1.5 flex-wrap">
-              {/* Sleek Dine-in vs Takeaway Segment */}
-              <div className="inline-flex rounded-xl border border-border bg-muted/40 p-0.5 text-xs shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => setOrderType("dinein")}
-                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${orderType === "dinein"
-                    ? "bg-primary text-white shadow-2xs"
-                    : "text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  <span className="text-xs">🍽️</span>
-                  <span>Dine-in</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOrderType("takeaway");
-                    setSelectedTableId(null);
-                    setLines([]);
-                    setQuickPhone("");
-                    setOrderNote("");
-                  }}
-                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${orderType === "takeaway"
-                    ? "bg-amber-600 text-white shadow-2xs"
-                    : "text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  <span className="text-xs">🥡</span>
-                  <span>Takeaway</span>
-                </button>
-              </div>
+          <div className="space-y-1.5 mb-2.5 pb-2.5 border-b border-border/60">
+            {/* Row 1: Order Mode (Dine-in vs Takeaway) - 50% / 50% Full-Width Grid (Zero Right Gap) */}
+            <div className="grid grid-cols-2 gap-1 w-full rounded-xl border border-border bg-muted/40 p-1 text-xs shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setOrderType("dinein")}
+                className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-bold transition-all ${orderType === "dinein"
+                  ? "bg-primary text-white shadow-2xs font-black"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                  }`}
+              >
+                <span className="text-sm">🍽️</span>
+                <span>Dine-in</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOrderType("takeaway");
+                  setSelectedTableId(null);
+                  setLines([]);
+                  setQuickPhone("");
+                  setOrderNote("");
+                }}
+                className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-bold transition-all ${orderType === "takeaway"
+                  ? "bg-amber-600 text-white shadow-2xs font-black"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                  }`}
+              >
+                <span className="text-sm">🥡</span>
+                <span>Takeaway</span>
+              </button>
+            </div>
 
-              {/* Sleek Channel Switcher (Counter, Swiggy, Zomato) */}
-              <div className="inline-flex rounded-xl border border-border bg-muted/40 p-0.5 text-xs shadow-2xs">
-                {db.channels.map((c) => (
+            {/* Row 2: Sales Channel Switcher (Counter, Swiggy, Zomato) - Symmetrical Full-Width 3-Column Grid */}
+            <div className="grid grid-cols-3 gap-1 w-full rounded-xl border border-border bg-muted/40 p-1 text-xs shadow-2xs">
+              {db.channels.map((c) => {
+                const isSelected = channel === c.id;
+                return (
                   <button
                     key={c.id}
                     onClick={() => changeChannel(c.id)}
-                    className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all ${channel === c.id
-                      ? "bg-foreground text-background shadow-2xs"
-                      : "text-muted-foreground hover:text-foreground"
+                    className={`rounded-lg py-1.5 text-center text-xs font-bold transition-all truncate ${isSelected
+                      ? "bg-foreground text-background shadow-2xs font-black"
+                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                       }`}
                   >
                     {c.id === "counter" ? "Counter" : c.name}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
+          </div>
 
             {/* Dine-in Interactive Floor Plan & Table Bar */}
             {orderType === "dinein" && activeModules.tables && (
@@ -1851,7 +1998,6 @@ function Billing() {
                 )}
               </div>
             )}
-          </div>
 
           {/* Active Bill Correction Banner */}
           {editingSaleId && (
