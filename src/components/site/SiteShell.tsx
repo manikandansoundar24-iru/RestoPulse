@@ -85,7 +85,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const openDemoModalForPlan = (planName: string) => {
     setDemoForm((f) => ({
       ...f,
-      purpose: `Spot Light POS: ${planName} (${pricingCycle === "annual" ? "Annual License" : "Monthly Plan"})`,
+      purpose: `RestoPulse POS: ${planName} (${pricingCycle === "annual" ? "Annual License" : "Monthly Plan"})`,
       restaurant: "Restaurant / Cloud Kitchen License",
     }));
     setShowPricingMenu(false);
@@ -161,7 +161,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 onMouseEnter={() => setShowPricingMenu(true)}
                 className="flex items-center gap-1 rounded-lg px-3.5 py-2 text-foreground/80 hover:bg-muted/70 hover:text-foreground transition-colors"
               >
-                <span>Pricing List</span>
+                <span>POS Pricing</span>
                 <ChevronDown className={`size-3 text-primary transition-transform duration-200 ${showPricingMenu ? "rotate-180" : ""}`} />
               </button>
 
@@ -173,7 +173,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 >
                   <div className="flex items-center justify-between pb-2.5 border-b border-border/60">
                     <span className="text-[11px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
-                      <Sparkles className="size-3.5" /> Spot Light POS Business Plans
+                      <Sparkles className="size-3.5" /> RestoPulse Cloud POS Plans
                     </span>
                     {/* Monthly vs Annual Toggle */}
                     <div className="flex items-center rounded-lg bg-muted p-0.5 text-[10px] font-bold">

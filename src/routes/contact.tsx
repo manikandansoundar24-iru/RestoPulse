@@ -29,10 +29,10 @@ function ContactPage() {
         </p>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2">
-          <a href="tel:+917092221808" className="surface-card block p-6">
+          <a href="tel:+919176754122" className="surface-card block p-6">
             <Phone className="size-5 text-primary" />
             <h2 className="mt-3 text-xl">CALL THE COUNTER</h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">+91 70922 21808 / +91 98844 30710 · 12:30 pm – 11:00 pm</p>
+            <p className="mt-1.5 text-sm text-muted-foreground">+91 91767 54122 · 12:30 pm – 11:00 pm</p>
           </a>
           <a href="mailto:orders@spotlightbiriyani.in" className="surface-card block p-6">
             <Mail className="size-5 text-primary" />

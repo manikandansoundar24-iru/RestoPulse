@@ -73,7 +73,7 @@ export const Route = createFileRoute("/")({
             "latitude": 12.9863,
             "longitude": 80.2425
           },
-          "telephone": "+91 70922 21808",
+          "telephone": "+91 91767 54122",
           "url": "https://restopulse.restopulse-cloud.workers.dev",
           "openingHoursSpecification": [
             {
@@ -202,7 +202,7 @@ function Home() {
   const [selectedBranch, setSelectedBranch] = useState("Tharamani");
 
   const openWhatsApp = (branchName: string, prefillMsg?: string) => {
-    const phone = "917092221808";
+    const phone = "9176754122";
     const text = encodeURIComponent(
       prefillMsg || `Hello Spot Light Biriyani! I want to order freshly made Chennai biriyani from your ${branchName} branch.`
     );
@@ -581,9 +581,9 @@ function Home() {
 
             <div className="mt-4 space-y-2">
               {[
-                { name: "Tharamani Flagship Kitchen", area: "No. 14, Kalikundram Main Rd", phone: "+91 70922 21808" },
-                { name: "WhatsApp Order & Delivery Hub", area: "Instant Dispatch & Token", phone: "+91 70922 21808" },
-                { name: "Counter Hotline", area: "Direct Kitchen Counter", phone: "+91 98844 30710" },
+                { name: "Tharamani Flagship Kitchen", area: "No. 14, Kalikundram Main Rd", phone: "+91 91767 54122" },
+                { name: "WhatsApp Order & Delivery Hub", area: "Instant Dispatch & Token", phone: "+91 91767 54122" },
+                { name: "Counter Hotline", area: "Direct Kitchen Counter", phone: "+91 91767 54122" },
               ].map((b) => (
                 <button
                   key={b.name}

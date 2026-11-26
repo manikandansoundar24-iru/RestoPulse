@@ -488,7 +488,7 @@ export const DEFAULT_TENANTS: TenantConfig[] = [
     businessName: "Spot Light Biriyani",
     tagline: "Authentic Chennai Dum Biriyani & Starters",
     activeBranchName: "Taramani (Flagship)",
-    phone: "+91 70922 21808",
+    phone: "+91 91767 54122",
     address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
     gstin: "33AAAAA0000A1Z5",
     fssai: "12424008000456",
@@ -508,7 +508,7 @@ export const DEFAULT_TENANTS: TenantConfig[] = [
         id: "taramani",
         name: "Tharamani / Kalikundram",
         address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
-        phone: "+91 70922 21808",
+        phone: "+91 91767 54122",
       },
     ],
     enabledModules: {
@@ -922,7 +922,7 @@ function seed(): DB {
       id: "taramani",
       name: "Tharamani / Kalikundram",
       address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
-      phone: "+91 70922 21808",
+      phone: "+91 91767 54122",
     },
   ];
 
@@ -1437,8 +1437,8 @@ export function getDB(): DB {
   // Ensure Spotlight Biriyani tenant details reflect real Google Maps shop info
   const spotlightT = cache.tenants?.find((t) => t.id === "spotlight-biriyani");
   if (spotlightT) {
-    if (spotlightT.phone !== "+91 70922 21808" || !spotlightT.address.includes("No. 14, Kalikundram")) {
-      spotlightT.phone = "+91 70922 21808";
+    if (spotlightT.phone !== "+91 91767 54122" || !spotlightT.address.includes("No. 14, Kalikundram")) {
+      spotlightT.phone = "+91 91767 54122";
       spotlightT.address = "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113";
       needsPersist = true;
     }
@@ -1450,7 +1450,7 @@ export function getDB(): DB {
           id: "taramani",
           name: "Tharamani / Kalikundram",
           address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
-          phone: "+91 70922 21808",
+          phone: "+91 91767 54122",
           enabledModules: existingTaramani?.enabledModules || spotlightT.enabledModules,
           degBatchEnabled: existingTaramani?.degBatchEnabled !== undefined ? existingTaramani.degBatchEnabled : spotlightT.degBatchEnabled,
         },
@@ -1477,7 +1477,7 @@ export function getDB(): DB {
         id: "taramani",
         name: "Tharamani / Kalikundram",
         address: "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113",
-        phone: "+91 70922 21808",
+        phone: "+91 91767 54122",
       },
     ];
     cache.settings.activeBranchId = "taramani";

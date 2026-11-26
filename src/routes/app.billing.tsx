@@ -466,7 +466,6 @@ function Billing() {
   const isDegBatchActive = isDegBatchActiveForTenant(activeTenant, activeBranchId);
   const [salesTick, setSalesTick] = useState(0);
   const [cat, setCat] = useState<Category | "all">("biryani");
-  const [addonsMode, setAddonsMode] = useState<"strip" | "cards" | "categories" | "off">("strip");
   const [lines, setLines] = useState<SaleLine[]>([]);
   const [channel, setChannel] = useState<ChannelId>("counter");
   const [discount, setDiscount] = useState(0);
@@ -1158,7 +1157,7 @@ function Billing() {
     const businessName = isSpotlight ? "SPOT LIGHT BIRIYANI" : (activeTenant.businessName || db?.settings?.businessName || "Restaurant").toUpperCase();
     const branch = activeTenant.branches?.find((b) => b.id === sale.branchId) || activeTenant.branches?.[0] || db?.branches[0];
     const address = branch?.address || activeTenant.address || "No. 14, Kalikundram Main Road, Tharamani, Chennai - 600113";
-    const phone = branch?.phone || activeTenant.phone || "+91 70922 21808";
+    const phone = branch?.phone || activeTenant.phone || "+91 91767 54122";
     const orderTypeStr = sale.orderType === "takeaway" ? "Takeaway / Parcel 🥡" : (sale.tableId ? `Dine-In (Table ${sale.tableId}) 🍽️` : "Dine-In 🍽️");
     const billRef = sale.id.slice(0, 6).toUpperCase();
     const dateStr = new Date(sale.date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
@@ -1405,27 +1404,6 @@ function Billing() {
   const items = useMemo(() => {
     const sanitized = sanitizeAndDeduplicateItems(tenantItems);
     return sanitized.filter((i) => (cat === "all" ? true : normalizeCategory(i.category) === cat) && i.active);
-  }, [tenantItems, cat]);
-
-  // Frequently paired add-ons from other categories to fill empty space and boost upsells
-  const quickAddons = useMemo(() => {
-    if (cat === "all") return [];
-    const sanitized = sanitizeAndDeduplicateItems(tenantItems);
-    const otherItems = sanitized.filter((i) => normalizeCategory(i.category) !== cat && i.active);
-
-    return otherItems
-      .sort((a, b) => {
-        const catA = normalizeCategory(a.category);
-        const catB = normalizeCategory(b.category);
-        const score = (c: string) => {
-          if (cat === "biryani" || cat === "kushka") {
-            return c === "starters" ? 4 : c === "beverages" ? 3 : c === "breads" ? 2 : 1;
-          }
-          return c === "biryani" ? 4 : c === "starters" ? 3 : c === "beverages" ? 2 : 1;
-        };
-        return score(catB) - score(catA);
-      })
-      .slice(0, 6);
   }, [tenantItems, cat]);
 
   // Cash change computation
@@ -1678,176 +1656,6 @@ function Billing() {
                 </div>
               );
             })()}
-
-            {/* Multi-Option Addons & Cross-sell Section */}
-            {cat !== "all" && (
-              <div className="mt-5 border-t border-border/60 pt-3">
-                <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="size-3.5 text-amber-500" />
-                    <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                      {addonsMode === "categories"
-                        ? "Quick Category Jump"
-                        : addonsMode === "off"
-                        ? "Paired Add-ons"
-                        : `Frequently Paired Add-ons (${cat === "biryani" ? "Starters, Breads & Drinks" : "Popular Dishes"})`}
-                    </span>
-                  </div>
-
-                  {/* Interactive Layout Switcher: Strip | Cards | Categories | Off */}
-                  <div className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5 text-[11px] font-bold">
-                    <button
-                      type="button"
-                      onClick={() => setAddonsMode("strip")}
-                      className={`px-2 py-0.5 rounded transition-all ${
-                        addonsMode === "strip"
-                          ? "bg-primary text-white shadow-2xs"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                      title="Compact 1-Tap Quick Upsell Strip"
-                    >
-                      ⚡ 1-Tap Strip
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAddonsMode("cards")}
-                      className={`px-2 py-0.5 rounded transition-all ${
-                        addonsMode === "cards"
-                          ? "bg-primary text-white shadow-2xs"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                      title="Full Dish Card Grid"
-                    >
-                      ▦ Card Grid
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAddonsMode("categories")}
-                      className={`px-2 py-0.5 rounded transition-all ${
-                        addonsMode === "categories"
-                          ? "bg-primary text-white shadow-2xs"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                      title="Category Switcher Cards"
-                    >
-                      🗂️ Categories
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAddonsMode("off")}
-                      className={`px-1.5 py-0.5 rounded transition-all ${
-                        addonsMode === "off"
-                          ? "bg-foreground text-background shadow-2xs"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                      title="Hide Add-ons Section"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-
-                {/* 1. Strip Mode: Sleek, Ultra-Fast 1-Tap Chips */}
-                {addonsMode === "strip" && (
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar">
-                    {quickAddons.map((item) => {
-                      const inCart = lines.find((l) => l.itemId === item.id);
-                      const price = priceFor(item.id);
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => add(item.id)}
-                          className={`shrink-0 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-all ${
-                            inCart
-                              ? "border-primary bg-primary/10 text-primary shadow-2xs"
-                              : "border-border bg-card hover:border-primary/50 hover:bg-muted text-foreground"
-                          }`}
-                          title={`Add ${item.name} (${inr(price)})`}
-                        >
-                          <span className="text-amber-500 font-black">+</span>
-                          <span>{item.name}</span>
-                          <span className="text-[11px] font-black text-primary">{inr(price)}</span>
-                          {inCart && (
-                            <span className="ml-0.5 rounded-full bg-primary px-1.5 py-0.2 text-[9px] font-black text-white">
-                              {inCart.qty}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* 2. Full Cards Grid Mode */}
-                {addonsMode === "cards" && (
-                  <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-                    {quickAddons.map((i) => {
-                      const inCart = lines.find((l) => l.itemId === i.id);
-                      return (
-                        <DishCard
-                          key={i.id}
-                          item={i}
-                          price={priceFor(i.id)}
-                          inCartLine={inCart}
-                          liveBatch={liveBatch}
-                          degBatchEnabled={isDegBatchActive}
-                          canIncreaseDeg={!isDegItem(i) || currentCartDegPlates < liveBatch.platesLeft}
-                          onAdd={() => add(i.id)}
-                          onStep={(d) => step(i.id, d)}
-                          onUpdateQty={(val) => updateQty(i.id, val)}
-                          onBlurQty={() => handleQtyBlur(i.id)}
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* 3. Category Jump Cards Mode */}
-                {addonsMode === "categories" && (
-                  <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-                    {allCategories
-                      .filter((c) => c.id !== cat && c.id !== "all")
-                      .slice(0, 4)
-                      .map((c) => {
-                        const count = categoryItemCounts[c.id] || 0;
-                        return (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => setCat(c.id)}
-                            className="flex items-center justify-between p-3 rounded-xl border border-border bg-card/80 hover:border-primary hover:bg-primary/5 hover:shadow-card transition-all text-left group"
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <span className="p-2 rounded-lg bg-muted text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                                {renderCategoryIcon(c.id, "size-4")}
-                              </span>
-                              <div className="min-w-0">
-                                <span className="block font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">
-                                  {c.label}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {count} items
-                                </span>
-                              </div>
-                            </div>
-                            <span className="text-muted-foreground group-hover:text-primary transition-colors text-xs font-black">
-                              ➔
-                            </span>
-                          </button>
-                        );
-                      })}
-                  </div>
-                )}
-
-                {/* 4. Off Mode */}
-                {addonsMode === "off" && (
-                  <p className="text-xs text-muted-foreground italic py-1">
-                    Add-ons hidden. Switch to ⚡ 1-Tap Strip or ▦ Card Grid above to view paired recommendations.
-                  </p>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
