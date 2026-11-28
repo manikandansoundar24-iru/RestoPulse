@@ -52,7 +52,7 @@ import {
   Lock,
   Smartphone,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback, memo } from "react";
 import { toast } from "sonner";
 
 import {
@@ -299,7 +299,7 @@ function playChime(type: "cash" | "print" = "cash", customStyle?: "kaching" | "t
   }
 }
 
-function DishCard({
+const DishCard = memo(function DishCard({
   item,
   inCartLine,
   liveBatch,
@@ -377,9 +377,9 @@ function DishCard({
               : "hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-card"
       }`}
     >
-      {/* Keyboard Shortcut Focus Badge */}
+      {/* Keyboard Shortcut Focus Badge (Hidden on mobile touch screens) */}
       {isFocused && (
-        <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 rounded bg-primary text-white text-[9px] font-mono font-black px-1.5 py-0.5 shadow-xs flex items-center gap-1 z-10 animate-in fade-in">
+        <span className="hidden md:flex absolute top-1 right-1 sm:top-1.5 sm:right-1.5 rounded bg-primary text-white text-[9px] font-mono font-black px-1.5 py-0.5 shadow-xs items-center gap-1 z-10 animate-in fade-in">
           <span>⏎ ADD</span>
           <span className="opacity-80">+/-</span>
         </span>
@@ -395,22 +395,9 @@ function DishCard({
         title={isSoldOut ? (!item.active ? "Item marked Off Menu" : "Batch Sold Out") : "Click or press Enter to add to bill"}
       >
         <div>
-          <p className={`${isAdaptive ? "text-sm sm:text-base font-bold" : "text-xs sm:text-sm font-bold"} text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight pr-14`}>
+          <p className={`${isAdaptive ? "text-sm sm:text-base font-bold" : "text-xs sm:text-sm font-bold"} text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight`}>
             {item.name}
           </p>
-          {isDeg && (
-            <span
-              className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.2 ${isAdaptive ? "text-[10px]" : "text-[9px]"} font-bold ${liveBatch.platesLeft > 30
-                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                : liveBatch.platesLeft > 10
-                  ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                  : "bg-rose-500/15 text-rose-600 dark:text-rose-400 font-black animate-pulse"
-                }`}
-            >
-              <Flame className="size-2.5" />
-              {degStockLabel}
-            </span>
-          )}
         </div>
         <div className="mt-1 flex items-baseline justify-between">
           <p className={`font-display ${isAdaptive ? "text-lg sm:text-xl" : "text-base sm:text-lg"} font-black text-primary`}>{inr(price)}</p>
@@ -472,7 +459,7 @@ function DishCard({
       )}
     </div>
   );
-}
+});
 
 function Billing() {
   const db = useDB();
@@ -503,6 +490,7 @@ function Billing() {
   const [historySearch, setHistorySearch] = useState("");
   const [historyChannelFilter, setHistoryChannelFilter] = useState<"all" | ChannelId>("all");
   const [quickPhone, setQuickPhone] = useState("");
+  const [mobileTab, setMobileTab] = useState<"menu" | "cart">("menu");
 
   // Keyboard-first POS Engine & Dish Quick Filter State
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -1366,7 +1354,7 @@ function Billing() {
       const newSale: Sale = {
         ...currentPreview,
         payment: chosenPayment,
-        id: currentPreview.id || Math.random().toString(36).slice(2, 10),
+        id: currentPreview.id || `slb_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         tenantId: activeTenant.id || "spotlight-biriyani",
         date: new Date().toISOString(),
         branchId: activeBranch,
@@ -1641,6 +1629,17 @@ function Billing() {
         }
       })();
 
+      // 10b. Tab / Shift+Tab Sequential Item Stepping (Pothys Standard)
+      if (e.key === "Tab") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          setFocusedIndex((prev) => Math.max(0, prev - 1));
+        } else {
+          setFocusedIndex((prev) => Math.min(items.length - 1, prev + 1));
+        }
+        return;
+      }
+
       // 11. Arrow Key Grid Navigation
       if (e.key === "ArrowRight") {
         e.preventDefault();
@@ -1829,12 +1828,40 @@ function Billing() {
 
           <button
             onClick={() => setCustomModalOpen(true)}
-            className="h-8 flex items-center gap-1.5 rounded-lg border border-primary/40 bg-card px-2.5 text-xs font-bold text-foreground hover:border-primary hover:text-primary transition-all shadow-2xs active:scale-98"
+            className="h-8 flex items-center gap-1.5 rounded-lg border border-primary/40 bg-card px-2.5 text-xs font-bold text-foreground hover:border-primary hover:text-primary transition-all shadow-2xs active:scale-98 shrink-0"
             title="Add an unlisted custom item or special order to the bill"
           >
             <PlusCircle className="size-3.5 text-primary shrink-0" />
             <span>+ Custom Item</span>
           </button>
+        </div>
+
+        {/* Center: Quick Dish Search Input (Placed directly between + Custom Item & Sound) */}
+        <div className="flex-1 max-w-xs sm:max-w-sm md:max-w-md mx-2 relative min-w-[140px]">
+          <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground pointer-events-none" />
+          <input
+            ref={dishSearchInputRef}
+            type="text"
+            placeholder="Quick find dish (Press / or F1)..."
+            value={dishSearch}
+            onChange={(e) => {
+              setDishSearch(e.target.value);
+              setFocusedIndex(0);
+            }}
+            className="w-full h-8 rounded-xl border border-border bg-card pl-8 pr-7 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none shadow-2xs"
+          />
+          {dishSearch && (
+            <button
+              onClick={() => {
+                setDishSearch("");
+                setFocusedIndex(0);
+              }}
+              className="absolute right-2 top-2 text-muted-foreground hover:text-foreground p-0.5"
+              title="Clear search (Esc)"
+            >
+              <X className="size-3" />
+            </button>
+          )}
         </div>
 
         {/* Right: Sound Control */}
@@ -1870,9 +1897,36 @@ function Billing() {
         </div>
       )}
 
+      {/* Mobile Device View Switcher (Smartphones < md): Toggle between Dishes & Cart */}
+      <div className="flex md:hidden items-center p-1 rounded-xl bg-muted/60 border border-border mb-3 w-full shadow-2xs">
+        <button
+          type="button"
+          onClick={() => setMobileTab("menu")}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+            mobileTab === "menu" ? "bg-card text-primary shadow-xs font-black" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Utensils className="size-3.5" />
+          <span>Dishes ({items.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab("cart")}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 relative ${
+            mobileTab === "cart" ? "bg-card text-primary shadow-xs font-black" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Receipt className="size-3.5" />
+          <span>Bill {preview ? `(${lines.length} · ${inr(preview.net)})` : "(Empty)"}</span>
+          {lines.length > 0 && (
+            <span className="size-2 rounded-full bg-primary animate-pulse" />
+          )}
+        </button>
+      </div>
+
       {/* Main 2-Column POS Workspace: Left = Kitchen Deg & Dishes, Right = Cart (Tablet & Desktop Side-by-Side) */}
       <div className="grid gap-4 sm:gap-5 md:grid-cols-[minmax(0,1fr)_330px] lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_390px] w-full min-w-0 max-w-full items-start pb-24 md:pb-6">
-        <div className="min-w-0 max-w-full">
+        <div className={`min-w-0 max-w-full ${mobileTab === "cart" ? "hidden md:block" : "block"}`}>
           {/* Live Kitchen Deg Batch Availability Bar (Compact Space-Saving Strip) */}
           {isDegBatchActive && (
             <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/25 bg-card/90 px-3 py-1.5 shadow-2xs backdrop-blur-xs">
@@ -1959,39 +2013,10 @@ function Billing() {
                   })}
                 </div>
               </div>
-
-              {/* Fast Dish Instant Search Box (Pothys-style keyboard search: Press / or F1) */}
-              <div className="relative w-full sm:w-64 shrink-0">
-                <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
-                <input
-                  ref={dishSearchInputRef}
-                  type="text"
-                  placeholder="Quick find dish (Press / or F1)..."
-                  value={dishSearch}
-                  onChange={(e) => {
-                    setDishSearch(e.target.value);
-                    setFocusedIndex(0);
-                  }}
-                  className="w-full rounded-xl border border-border bg-card pl-8 pr-7 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none shadow-2xs"
-                />
-                {dishSearch && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDishSearch("");
-                      setFocusedIndex(0);
-                    }}
-                    className="absolute right-2 top-2 text-muted-foreground hover:text-foreground p-0.5"
-                    title="Clear search (Esc)"
-                  >
-                    <X className="size-3" />
-                  </button>
-                )}
-              </div>
             </div>
 
-            {/* Keyboard POS Mode Guide Banner */}
-            <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-muted/40 border border-border/50 text-[11px] text-muted-foreground shadow-2xs">
+            {/* Keyboard POS Mode Guide Banner (Visible on Laptop, PC & Physical Keyboard Tablets) */}
+            <div className="hidden md:flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-muted/40 border border-border/50 text-[11px] text-muted-foreground shadow-2xs">
               <span className="font-bold flex items-center gap-1.5 text-foreground shrink-0">
                 <span>⌨️</span> <span className="hidden sm:inline">Keyboard POS:</span>
               </span>
@@ -2045,7 +2070,20 @@ function Billing() {
         </div>
 
         {/* Cart / Order Summary (Sticky on Tablet & Desktop) */}
-        <aside id="pos-cart" className="surface-card h-fit p-3.5 sm:p-4 lg:p-5 md:sticky md:top-20 w-full min-w-0 max-w-full overflow-hidden">
+        <aside id="pos-cart" className={`surface-card h-fit p-3.5 sm:p-4 lg:p-5 md:sticky md:top-20 w-full min-w-0 max-w-full overflow-hidden ${mobileTab === "menu" ? "hidden md:block" : "block"}`}>
+          {/* Mobile Back Button to Menu */}
+          <div className="flex md:hidden items-center justify-between pb-2 mb-2 border-b border-border">
+            <button
+              type="button"
+              onClick={() => setMobileTab("menu")}
+              className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline py-1"
+            >
+              <span>← Back to Dishes</span>
+            </button>
+            <span className="text-xs font-black text-muted-foreground uppercase">
+              Current Bill
+            </span>
+          </div>
           {/* Executive Compact Unified Header: Order Mode + Channel Switcher */}
           <div className="space-y-1.5 mb-2.5 pb-2.5 border-b border-border/60">
             {/* Row 1: Order Mode (Dine-in vs Takeaway) - 50% / 50% Full-Width Grid (Zero Right Gap) */}
@@ -2537,63 +2575,66 @@ function Billing() {
                     : payment === "upi"
                       ? "UPI RECEIVED & PRINT (F2)"
                       : payment === "card"
-                        ? "CARD CHARGED & PRINT (F2)"
+                        ? "CARD CHARGED & PRINT"
                         : payment === "online"
-                          ? "ONLINE ORDER & PRINT (F2)"
-                          : "SAVE BILL & PRINT (CASH) - F2"}
+                          ? "ONLINE ORDER & PRINT"
+                          : "SAVE BILL & PRINT (CASH)"}
+                  <span className="hidden md:inline text-xs opacity-80 font-mono ml-1 font-normal">· F2</span>
               </span>
             </button>
 
-            {/* Inline Quick WhatsApp Row (Only when cart has items) */}
+            {/* Inline Quick WhatsApp Card (Fully Responsive: Phone, Tab, Lap & PC) */}
             {preview && (
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-1.5 shadow-2xs">
-                  <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 pl-1 shrink-0 flex items-center gap-1">
-                    <MessageSquare className="size-3.5 text-emerald-600" /> WhatsApp:
+              <div className="space-y-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-2 shadow-2xs">
+                <div className="flex items-center justify-between text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+                  <span className="flex items-center gap-1.5">
+                    <MessageSquare className="size-3.5 text-emerald-600" /> WhatsApp Receipt:
                   </span>
-                  <input
-                    ref={quickPhoneRef}
-                    type="tel"
-                    placeholder="10-digit mobile (Press F9)..."
-                    value={quickPhone}
-                    onChange={(e) => setQuickPhone(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && preview) {
-                        e.preventDefault();
-                        handleQuickWhatsApp();
-                      }
-                    }}
-                    className="h-8 flex-1 min-w-0 rounded-lg border border-border bg-card px-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none"
-                  />
-                  {/* WhatsApp Mode Switcher: Desktop App vs Single Web Tab */}
-                  <button
-                    type="button"
-                    onClick={toggleWaMode}
-                    className="h-8 px-2 rounded-lg border border-border bg-card text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1 shrink-0"
-                    title={
-                      waMode === "desktop"
-                        ? "Currently: Windows WhatsApp Desktop App (Direct protocol, zero browser tabs). Click to switch to Single Tab."
-                        : "Currently: WhatsApp Web (Single reused tab, zero duplicate tabs). Click to switch to Desktop App."
-                    }
-                  >
-                    {waMode === "desktop" ? "💻 Desktop" : "🌐 Single Tab"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!preview}
-                    onClick={handleQuickWhatsApp}
-                    className="h-8 shrink-0 flex items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-2xs"
-                    title="Save bill and dispatch WhatsApp receipt"
-                  >
-                    <Send className="size-3 shrink-0" />
-                    <span>Send</span>
-                  </button>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold hidden sm:inline">
+                    Auto-copies receipt text
+                  </span>
                 </div>
-                <div className="flex items-center justify-between px-1 text-[10px] text-muted-foreground">
-                  <span>
-                    {waMode === "desktop" ? "🚀 Directly opens Windows WhatsApp App" : "🔒 Reuses single WhatsApp Web tab (Zero duplicate tabs)"}
-                  </span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Auto-copies receipt text</span>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5">
+                  <div className="relative flex-1 min-w-0">
+                    <input
+                      ref={quickPhoneRef}
+                      type="tel"
+                      placeholder="Customer 10-digit mobile..."
+                      value={quickPhone}
+                      onChange={(e) => setQuickPhone(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && preview) {
+                          e.preventDefault();
+                          handleQuickWhatsApp();
+                        }
+                      }}
+                      className="h-9 w-full rounded-lg border border-border bg-card px-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground placeholder:font-normal focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={toggleWaMode}
+                      className="hidden sm:flex h-9 px-2 rounded-lg border border-border bg-card text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors items-center gap-1 shrink-0"
+                      title={
+                        waMode === "desktop"
+                          ? "Currently: Windows WhatsApp Desktop App. Click to switch to Single Web Tab."
+                          : "Currently: WhatsApp Web (Single reused tab). Click to switch to Desktop App."
+                      }
+                    >
+                      {waMode === "desktop" ? "💻 Desktop" : "🌐 Web Tab"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!preview}
+                      onClick={handleQuickWhatsApp}
+                      className="h-9 flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-4 text-xs font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-2xs active:scale-98 shrink-0"
+                      title="Save bill and dispatch WhatsApp receipt"
+                    >
+                      <Send className="size-3.5 shrink-0" />
+                      <span>Send WhatsApp</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -2668,12 +2709,15 @@ function Billing() {
         </aside>
       </div>
 
-      {/* Floating Sticky Mobile Cart Quick-Action (Only on mobile screens < 768px when items are in cart) */}
-      {lines.length > 0 && (
+      {/* Floating Sticky Mobile Cart Quick-Action (Only on mobile screens < 768px when on menu and items are in cart) */}
+      {mobileTab === "menu" && lines.length > 0 && (
         <div className="md:hidden fixed bottom-3 left-3 right-3 z-40">
           <button
             type="button"
-            onClick={() => document.getElementById("pos-cart")?.scrollIntoView({ behavior: "smooth" })}
+            onClick={() => {
+              setMobileTab("cart");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
             className="w-full flex items-center justify-between rounded-2xl bg-gradient-to-r from-primary via-orange-600 to-amber-600 p-3.5 text-white shadow-2xl shadow-primary/40 border border-white/20 active:scale-98 transition-all"
           >
             <div className="flex items-center gap-2">
@@ -2682,11 +2726,11 @@ function Billing() {
               </span>
               <div className="text-left">
                 <p className="text-xs font-black tracking-wide leading-none">{lines.reduce((s, l) => s + l.qty, 0)} Items Selected</p>
-                <p className="text-[10px] text-white/80 font-medium leading-none mt-1">Tap to review cart &amp; print</p>
+                <p className="text-[10px] text-white/80 font-medium leading-none mt-1">Tap to review bill &amp; pay</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-base font-black tracking-tight">₹{preview?.net ?? 0}</span>
+              <span className="text-base font-black tracking-tight">{inr(preview?.net ?? 0)}</span>
               <span className="rounded-xl bg-white text-primary px-3 py-1 text-xs font-black shadow-xs">Pay &gt;</span>
             </div>
           </button>

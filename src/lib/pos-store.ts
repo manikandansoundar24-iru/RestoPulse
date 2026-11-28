@@ -665,7 +665,7 @@ export type DB = {
 
 /* ---------------------------------- seed ---------------------------------- */
 
-const id = () => Math.random().toString(36).slice(2, 10);
+const id = () => `slb_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 export const CATEGORIES: { id: Category; label: string }[] = [
   { id: "biryani", label: "Biriyani" },
@@ -1495,11 +1495,9 @@ export function getDB(): DB {
     const cleaned = cache.sales.filter((s) => {
       // 1. Purge legacy mock sales from defunct branches
       if (s.branchId === "adyar" || s.branchId === "velachery") return false;
-      // 2. Filter out auto-seeded test bills generated today
-      if (s.date && s.date.slice(0, 10) === todayYMD) {
-        if (s.branchId === "taramani" && s.id && (s.id.startsWith("s-") || s.id.length <= 8)) {
-          return false;
-        }
+      // 2. Filter out explicit legacy mock bills only (never drop real customer sales)
+      if ((s as any).isMockSeed === true || s.id === "seed-mock" || s.id === "mock-1") {
+        return false;
       }
       // 3. Keep sales within the last 14 days
       if (s.date && s.date < cutoffISO) {

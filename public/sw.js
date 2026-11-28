@@ -1,14 +1,15 @@
 // RestoPulse Offline-First Service Worker
-const CACHE_NAME = "restopulse-cache-v2";
+const CACHE_NAME = "restopulse-cache-v4";
 const STATIC_ASSETS = [
   "/",
   "/app",
   "/app/billing",
   "/login",
   "/manifest.json",
+  "/favicon.svg",
+  "/favicon.png",
   "/icon-192.png",
-  "/icon-512.png",
-  "/favicon.ico"
+  "/icon-512.png"
 ];
 
 // Install: Cache core application shell and skip waiting immediately
