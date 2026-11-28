@@ -52,7 +52,7 @@ import {
   Lock,
   Smartphone,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -307,10 +307,12 @@ function DishCard({
   canIncreaseDeg,
   degBatchEnabled = false,
   isAdaptive = false,
+  isFocused = false,
   onAdd,
   onStep,
   onUpdateQty,
   onBlurQty,
+  onSelectFocus,
 }: {
   item: Item;
   inCartLine?: SaleLine | undefined;
@@ -319,10 +321,12 @@ function DishCard({
   canIncreaseDeg: boolean;
   degBatchEnabled?: boolean;
   isAdaptive?: boolean;
+  isFocused?: boolean;
   onAdd: () => void;
   onStep: (delta: number) => void;
   onUpdateQty: (val: string) => void;
   onBlurQty: () => void;
+  onSelectFocus?: () => void;
 }) {
   const inCartQty = inCartLine?.qty ?? 0;
   const isInCart = inCartLine !== undefined;
@@ -362,20 +366,36 @@ function DishCard({
 
   return (
     <div
-      className={`surface-card group relative ${isAdaptive ? "p-3 sm:p-4 min-h-[105px]" : "p-2 sm:p-2.5"} text-left transition-all min-w-0 max-w-full overflow-hidden flex flex-col justify-between ${isSoldOut
-        ? "opacity-60 bg-muted/20 border-border/40"
-        : isInCart
-          ? "border-primary/90 bg-primary/5 shadow-ember"
-          : "hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-card"
-        }`}
+      onMouseEnter={onSelectFocus}
+      className={`surface-card group relative ${isAdaptive ? "p-3 sm:p-4 min-h-[105px]" : "p-2 sm:p-2.5"} text-left transition-all min-w-0 max-w-full overflow-hidden flex flex-col justify-between ${
+        isSoldOut
+          ? "opacity-60 bg-muted/20 border-border/40"
+          : isFocused
+            ? "border-primary ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/10 shadow-lg scale-[1.02]"
+            : isInCart
+              ? "border-primary/90 bg-primary/5 shadow-ember"
+              : "hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-card"
+      }`}
     >
+      {/* Keyboard Shortcut Focus Badge */}
+      {isFocused && (
+        <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 rounded bg-primary text-white text-[9px] font-mono font-black px-1.5 py-0.5 shadow-xs flex items-center gap-1 z-10 animate-in fade-in">
+          <span>⏎ ADD</span>
+          <span className="opacity-80">+/-</span>
+        </span>
+      )}
       <div
         className={`flex-1 flex flex-col justify-between ${isSoldOut ? "cursor-not-allowed" : "cursor-pointer"}`}
-        onClick={() => !isSoldOut && onAdd()}
-        title={isSoldOut ? (!item.active ? "Item marked Off Menu" : "Batch Sold Out") : "Click to add to bill"}
+        onClick={() => {
+          if (!isSoldOut) {
+            onSelectFocus?.();
+            onAdd();
+          }
+        }}
+        title={isSoldOut ? (!item.active ? "Item marked Off Menu" : "Batch Sold Out") : "Click or press Enter to add to bill"}
       >
         <div>
-          <p className={`${isAdaptive ? "text-sm sm:text-base font-bold" : "text-xs sm:text-sm font-bold"} text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight`}>
+          <p className={`${isAdaptive ? "text-sm sm:text-base font-bold" : "text-xs sm:text-sm font-bold"} text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight pr-14`}>
             {item.name}
           </p>
           {isDeg && (
@@ -483,6 +503,20 @@ function Billing() {
   const [historySearch, setHistorySearch] = useState("");
   const [historyChannelFilter, setHistoryChannelFilter] = useState<"all" | ChannelId>("all");
   const [quickPhone, setQuickPhone] = useState("");
+
+  // Keyboard-first POS Engine & Dish Quick Filter State
+  const [focusedIndex, setFocusedIndex] = useState(0);
+  const [dishSearch, setDishSearch] = useState("");
+  const [waMode, setWaMode] = useState<"desktop" | "web">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("restopulse_wa_mode") as "desktop" | "web") || "web";
+    }
+    return "web";
+  });
+
+  const dishSearchInputRef = useRef<HTMLInputElement>(null);
+  const cashInputRef = useRef<HTMLInputElement>(null);
+  const quickPhoneRef = useRef<HTMLInputElement>(null);
 
   // Phase 2 Enterprise State: Tables, KDS, UPI QR, Z-Report
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
@@ -1188,27 +1222,61 @@ function Billing() {
     ].filter(Boolean).join("\n");
   };
 
+  const toggleWaMode = () => {
+    const next = waMode === "web" ? "desktop" : "web";
+    setWaMode(next);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("restopulse_wa_mode", next);
+    }
+    toast.info(
+      next === "desktop"
+        ? "💻 WhatsApp Mode: Native Desktop App (Zero browser tabs)"
+        : "🌐 WhatsApp Mode: Web (Reuses a single tab)",
+    );
+  };
+
   const openWhatsAppSafely = (phone10Digits: string, message: string) => {
     const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const waUrl = isMobile
-      ? `https://wa.me/91${phone10Digits}?text=${encodeURIComponent(message)}`
-      : `https://web.whatsapp.com/send?phone=91${phone10Digits}&text=${encodeURIComponent(message)}`;
-    
-    // Always attempt window.open
-    const popup = window.open(waUrl, "_blank");
-    if (!popup || popup.closed || typeof popup.closed === "undefined") {
-      try {
+
+    // Auto-copy receipt text to clipboard as safety backup
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
         navigator.clipboard.writeText(message);
-      } catch {}
+      }
+    } catch {}
+
+    if (isMobile) {
+      const waUrl = `https://wa.me/91${phone10Digits}?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, "_blank");
+      toast.success(`WhatsApp receipt opened for +91 ${phone10Digits}!`);
+      return;
+    }
+
+    if (waMode === "desktop") {
+      // Direct Windows/Mac native protocol: Launches WhatsApp Desktop App directly without opening ANY browser tabs!
+      const desktopProtocolUrl = `whatsapp://send?phone=91${phone10Digits}&text=${encodeURIComponent(message)}`;
+      window.location.href = desktopProtocolUrl;
+      toast.success(`Sent to WhatsApp Desktop App for +91 ${phone10Digits}! (Receipt text copied to clipboard)`);
+      return;
+    }
+
+    // Single-tab Web WhatsApp: Reuses the exact same tab 'restopulse_whatsapp' every single time!
+    // NEVER spawns multiple tabs or causes WhatsApp multi-session conflicts!
+    const webUrl = `https://web.whatsapp.com/send?phone=91${phone10Digits}&text=${encodeURIComponent(message)}`;
+    const popup = window.open(webUrl, "restopulse_whatsapp");
+    if (!popup || popup.closed || typeof popup.closed === "undefined") {
       toast.info("WhatsApp popup was blocked. Message copied to clipboard! Click to open.", {
         action: {
           label: "Open WhatsApp",
-          onClick: () => window.open(waUrl, "_blank"),
+          onClick: () => window.open(webUrl, "restopulse_whatsapp"),
         },
         duration: 8000,
       });
     } else {
-      toast.success(`WhatsApp receipt opened for +91 ${phone10Digits}!`);
+      try {
+        popup.focus();
+      } catch {}
+      toast.success(`WhatsApp receipt loaded in single tab for +91 ${phone10Digits}!`);
     }
   };
 
@@ -1386,8 +1454,40 @@ function Billing() {
     setQuickPhone("");
   };
 
+  const items = useMemo(() => {
+    const sanitized = sanitizeAndDeduplicateItems(tenantItems);
+    const q = dishSearch.trim().toLowerCase();
+    return sanitized.filter((i) => {
+      if (!i.active) return false;
+      const matchesCat = cat === "all" ? true : normalizeCategory(i.category) === cat;
+      if (!matchesCat && !q) return false;
+      if (q) {
+        return (
+          i.name.toLowerCase().includes(q) ||
+          (i.category || "").toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [tenantItems, cat, dishSearch]);
+
+  // Keep focusedIndex clamped within valid bounds of items
+  useEffect(() => {
+    if (focusedIndex >= items.length && items.length > 0) {
+      setFocusedIndex(items.length - 1);
+    }
+  }, [items.length, focusedIndex]);
+
+  // Comprehensive Keyboard-First POS Billing Engine (Pothys Standard)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isInputFocused =
+        activeEl instanceof HTMLInputElement ||
+        activeEl instanceof HTMLTextAreaElement ||
+        activeEl instanceof HTMLSelectElement;
+
+      // 1. Global Hotkey: F2 Print & Settle (Even when in inputs)
       if (e.key === "F2") {
         e.preventDefault();
         if (preview) {
@@ -1395,16 +1495,248 @@ function Billing() {
         } else {
           toast.info("Add items to bill before printing (F2)");
         }
+        return;
+      }
+
+      // 2. Global Hotkey: Escape
+      if (e.key === "Escape") {
+        if (isInputFocused && activeEl) {
+          (activeEl as HTMLElement).blur();
+          e.preventDefault();
+          return;
+        }
+        if (dishSearch) {
+          setDishSearch("");
+          setFocusedIndex(0);
+          e.preventDefault();
+          return;
+        }
+        if (editBatchModalOpen || degDetailsModalOpen || orderHistoryOpen || tableFloorModalOpen || whatsappModalOpen) {
+          setEditBatchModalOpen(false);
+          setDegDetailsModalOpen(false);
+          setOrderHistoryOpen(false);
+          setTableFloorModalOpen(false);
+          setWhatsappModalOpen(false);
+          e.preventDefault();
+          return;
+        }
+      }
+
+      // If user is currently typing inside an input box, only handle special transitions
+      if (isInputFocused) {
+        if (activeEl === dishSearchInputRef.current) {
+          if (e.key === "ArrowDown" || e.key === "Enter") {
+            e.preventDefault();
+            activeEl.blur();
+            if (items.length > 0) {
+              setFocusedIndex(0);
+              if (e.key === "Enter" && items[0]) {
+                add(items[0].id);
+                playChime("tap", soundStyle);
+              }
+            }
+          }
+        }
+        return;
+      }
+
+      // 3. Quick Search Shortcuts: '/' or 'F1'
+      if (e.key === "/" || e.key === "F1") {
+        e.preventDefault();
+        dishSearchInputRef.current?.focus();
+        dishSearchInputRef.current?.select();
+        return;
+      }
+
+      // 4. F3: Cycle Payment Method (Cash -> UPI -> Card -> Online)
+      if (e.key === "F3") {
+        e.preventDefault();
+        const paymentMethods: Sale["payment"][] = ["cash", "upi", "card", "online"];
+        const nextIdx = (paymentMethods.indexOf(payment) + 1) % paymentMethods.length;
+        setPayment(paymentMethods[nextIdx]);
+        playChime("tap", soundStyle);
+        toast.info(`Payment: ${paymentMethods[nextIdx].toUpperCase()} (Press F3 to cycle)`);
+        return;
+      }
+
+      // 5. F4: Toggle Dine-in vs Takeaway
+      if (e.key === "F4") {
+        e.preventDefault();
+        const nextType = orderType === "dinein" ? "takeaway" : "dinein";
+        setOrderType(nextType);
+        if (nextType === "takeaway") {
+          setSelectedTableId(null);
+        }
+        playChime("tap", soundStyle);
+        toast.info(`Order Mode: ${nextType === "takeaway" ? "Takeaway 🥡" : "Dine-in 🍽️"} (F4)`);
+        return;
+      }
+
+      // 6. F8: Focus Cash Tendered Input
+      if (e.key === "F8") {
+        e.preventDefault();
+        cashInputRef.current?.focus();
+        cashInputRef.current?.select();
+        return;
+      }
+
+      // 7. F9: Focus WhatsApp Phone Input
+      if (e.key === "F9") {
+        e.preventDefault();
+        quickPhoneRef.current?.focus();
+        quickPhoneRef.current?.select();
+        return;
+      }
+
+      // 8. Category Cycling: '[' and ']' or PageUp / PageDown
+      if (e.key === "]" || e.key === "PageDown") {
+        e.preventDefault();
+        const currentCatIdx = allCategories.findIndex((c) => c.id === cat);
+        const nextIdx = (currentCatIdx + 1) % allCategories.length;
+        setCat(allCategories[nextIdx].id);
+        setDishSearch("");
+        setFocusedIndex(0);
+        playChime("tap", soundStyle);
+        return;
+      }
+      if (e.key === "[" || e.key === "PageUp") {
+        e.preventDefault();
+        const currentCatIdx = allCategories.findIndex((c) => c.id === cat);
+        const prevIdx = (currentCatIdx - 1 + allCategories.length) % allCategories.length;
+        setCat(allCategories[prevIdx].id);
+        setDishSearch("");
+        setFocusedIndex(0);
+        playChime("tap", soundStyle);
+        return;
+      }
+
+      // 9. Alt + 1..9 Direct Category Jump
+      if (e.altKey && e.key >= "1" && e.key <= "9") {
+        const catIdx = parseInt(e.key, 10) - 1;
+        if (allCategories[catIdx]) {
+          e.preventDefault();
+          setCat(allCategories[catIdx].id);
+          setDishSearch("");
+          setFocusedIndex(0);
+          playChime("tap", soundStyle);
+          return;
+        }
+      }
+
+      // 10. Responsive Column Count Calculation for Arrow Navigation
+      const cols = (() => {
+        if (typeof window === "undefined") return 3;
+        const w = window.innerWidth;
+        const isSmallCategory = cat !== "all" && items.length <= 6 && !dishSearch;
+        if (isSmallCategory) {
+          if (w >= 1024) return 3;
+          if (w >= 640) return 2;
+          return 1;
+        } else {
+          if (w >= 1536) return 6;
+          if (w >= 1280) return 5;
+          if (w >= 768) return 4;
+          if (w >= 640) return 3;
+          return 2;
+        }
+      })();
+
+      // 11. Arrow Key Grid Navigation
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setFocusedIndex((prev) => Math.min(items.length - 1, prev + 1));
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setFocusedIndex((prev) => Math.max(0, prev - 1));
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setFocusedIndex((prev) => Math.min(items.length - 1, prev + cols));
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setFocusedIndex((prev) => Math.max(0, prev - cols));
+        return;
+      }
+
+      // 12. '+' or '=' (Quantity Increase / Quick Add)
+      if (e.key === "+" || e.key === "=") {
+        e.preventDefault();
+        const target = items[focusedIndex];
+        if (target) {
+          const inCart = lines.find((l) => l.itemId === target.id);
+          if (inCart) {
+            step(target.id, 1);
+          } else {
+            add(target.id);
+          }
+          playChime("tap", soundStyle);
+        }
+        return;
+      }
+
+      // 13. '-' or '_' (Quantity Decrease)
+      if (e.key === "-" || e.key === "_") {
+        e.preventDefault();
+        const target = items[focusedIndex];
+        if (target) {
+          step(target.id, -1);
+          playChime("tap", soundStyle);
+        }
+        return;
+      }
+
+      // 14. Enter or Space: Add Focused Item
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        const target = items[focusedIndex];
+        if (target) {
+          add(target.id);
+          playChime("tap", soundStyle);
+        }
+        return;
+      }
+
+      // 15. Delete or Backspace: Remove Focused Item from Cart
+      if (e.key === "Delete" || e.key === "Backspace") {
+        const target = items[focusedIndex];
+        if (target) {
+          const inCart = lines.find((l) => l.itemId === target.id);
+          if (inCart) {
+            e.preventDefault();
+            setLines((prev) => prev.filter((l) => l.itemId !== target.id));
+            playChime("tap", soundStyle);
+            toast.info(`Removed ${target.name} from bill`);
+          }
+        }
+        return;
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [preview, saveOrUpdate]);
-
-  const items = useMemo(() => {
-    const sanitized = sanitizeAndDeduplicateItems(tenantItems);
-    return sanitized.filter((i) => (cat === "all" ? true : normalizeCategory(i.category) === cat) && i.active);
-  }, [tenantItems, cat]);
+  }, [
+    items,
+    focusedIndex,
+    lines,
+    cat,
+    allCategories,
+    orderType,
+    payment,
+    preview,
+    dishSearch,
+    saveOrUpdate,
+    soundStyle,
+    editBatchModalOpen,
+    degDetailsModalOpen,
+    orderHistoryOpen,
+    tableFloorModalOpen,
+    whatsappModalOpen,
+  ]);
 
   // Cash change computation
   const tenderNum = Number(cashTendered) || 0;
@@ -1594,38 +1926,89 @@ function Billing() {
             </div>
           )}
 
-          {/* Top Categories Ribbon Strip & Dishes Grid (Top Tabs Only) */}
-          <div className="mt-2.5">
-            {/* Top Ribbon Categories (Horizontal Scroll Strip) */}
-            <div className="w-full max-w-full min-w-0 overflow-hidden">
-              <div className="flex gap-1.5 overflow-x-auto pb-1.5 no-scrollbar max-w-full">
-                {allCategories.map((c) => {
-                  const count = categoryItemCounts[c.id] || 0;
-                  const isSelected = cat === c.id;
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={() => setCat(c.id)}
-                      className={`shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold transition-all ${isSelected
-                        ? "border-primary bg-primary text-primary-foreground shadow-ember scale-[1.02]"
-                        : "border-border bg-card/70 text-muted-foreground hover:border-border hover:bg-card hover:text-foreground"
-                        }`}
-                    >
-                      <span className="shrink-0">{renderCategoryIcon(c.id, "size-3.5")}</span>
-                      <span>{c.label}</span>
-                      <span className={`ml-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-bold ${isSelected ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
-                        }`}>
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
+          {/* Top Categories Ribbon Strip, Fast Search & Dishes Grid */}
+          <div className="mt-2.5 space-y-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              {/* Top Ribbon Categories (Horizontal Scroll Strip) */}
+              <div className="flex-1 min-w-[280px] overflow-hidden">
+                <div className="flex gap-1.5 overflow-x-auto pb-1.5 no-scrollbar max-w-full">
+                  {allCategories.map((c) => {
+                    const count = categoryItemCounts[c.id] || 0;
+                    const isSelected = cat === c.id && !dishSearch;
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          setCat(c.id);
+                          setDishSearch("");
+                          setFocusedIndex(0);
+                        }}
+                        className={`shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold transition-all ${isSelected
+                          ? "border-primary bg-primary text-primary-foreground shadow-ember scale-[1.02]"
+                          : "border-border bg-card/70 text-muted-foreground hover:border-border hover:bg-card hover:text-foreground"
+                          }`}
+                      >
+                        <span className="shrink-0">{renderCategoryIcon(c.id, "size-3.5")}</span>
+                        <span>{c.label}</span>
+                        <span className={`ml-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-bold ${isSelected ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                          }`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Fast Dish Instant Search Box (Pothys-style keyboard search: Press / or F1) */}
+              <div className="relative w-full sm:w-64 shrink-0">
+                <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
+                <input
+                  ref={dishSearchInputRef}
+                  type="text"
+                  placeholder="Quick find dish (Press / or F1)..."
+                  value={dishSearch}
+                  onChange={(e) => {
+                    setDishSearch(e.target.value);
+                    setFocusedIndex(0);
+                  }}
+                  className="w-full rounded-xl border border-border bg-card pl-8 pr-7 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none shadow-2xs"
+                />
+                {dishSearch && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDishSearch("");
+                      setFocusedIndex(0);
+                    }}
+                    className="absolute right-2 top-2 text-muted-foreground hover:text-foreground p-0.5"
+                    title="Clear search (Esc)"
+                  >
+                    <X className="size-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Keyboard POS Mode Guide Banner */}
+            <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-muted/40 border border-border/50 text-[11px] text-muted-foreground shadow-2xs">
+              <span className="font-bold flex items-center gap-1.5 text-foreground shrink-0">
+                <span>⌨️</span> <span className="hidden sm:inline">Keyboard POS:</span>
+              </span>
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar font-mono text-[10px] text-muted-foreground">
+                <span className="rounded bg-card border border-border/70 px-1.5 py-0.5 text-foreground font-semibold">↑↓←→ Move</span>
+                <span className="rounded bg-primary text-white font-bold px-1.5 py-0.5">Enter Add</span>
+                <span className="rounded bg-card border border-border/70 px-1.5 py-0.5 text-foreground font-semibold">+ / - Qty</span>
+                <span className="rounded bg-card border border-border/70 px-1.5 py-0.5 text-foreground font-semibold hidden md:inline">[ ] Category</span>
+                <span className="rounded bg-amber-600 text-white font-bold px-1.5 py-0.5">F2 Print (Cash)</span>
+                <span className="rounded bg-card border border-border/70 px-1.5 py-0.5 text-foreground font-semibold hidden lg:inline">F3 Pay</span>
+                <span className="rounded bg-card border border-border/70 px-1.5 py-0.5 text-foreground font-semibold hidden lg:inline">F4 Order</span>
               </div>
             </div>
 
             {/* Dishes Grid: Adaptive Sizing for Small vs Large Categories */}
             {(() => {
-              const isSmallCategory = cat !== "all" && items.length <= 6;
+              const isSmallCategory = cat !== "all" && items.length <= 6 && !dishSearch;
               return (
                 <div
                   className={`mt-2.5 grid ${
@@ -1634,7 +2017,7 @@ function Billing() {
                       : "gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
                   }`}
                 >
-                  {items.map((i) => {
+                  {items.map((i, idx) => {
                     const inCart = lines.find((l) => l.itemId === i.id);
                     return (
                       <DishCard
@@ -1645,11 +2028,13 @@ function Billing() {
                         liveBatch={liveBatch}
                         degBatchEnabled={isDegBatchActive}
                         isAdaptive={isSmallCategory}
+                        isFocused={idx === focusedIndex}
                         canIncreaseDeg={!isDegItem(i) || currentCartDegPlates < liveBatch.platesLeft}
                         onAdd={() => add(i.id)}
                         onStep={(d) => step(i.id, d)}
                         onUpdateQty={(val) => updateQty(i.id, val)}
                         onBlurQty={() => handleQtyBlur(i.id)}
+                        onSelectFocus={() => setFocusedIndex(idx)}
                       />
                     );
                   })}
@@ -2024,8 +2409,9 @@ function Billing() {
                 })}
               </div>
               <input
+                ref={cashInputRef}
                 type="number"
-                placeholder="Or enter cash received..."
+                placeholder="Or enter cash received (Shortcut: F8)..."
                 value={cashTendered}
                 onChange={(e) => setCashTendered(e.target.value === "" ? "" : Number(e.target.value))}
                 className="mt-2 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
@@ -2160,33 +2546,55 @@ function Billing() {
 
             {/* Inline Quick WhatsApp Row (Only when cart has items) */}
             {preview && (
-              <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-1.5 shadow-2xs">
-                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 pl-1 shrink-0 flex items-center gap-1">
-                  <MessageSquare className="size-3.5 text-emerald-600" /> WhatsApp:
-                </span>
-                <input
-                  type="tel"
-                  placeholder="10-digit mobile (optional)"
-                  value={quickPhone}
-                  onChange={(e) => setQuickPhone(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && preview) {
-                      e.preventDefault();
-                      handleQuickWhatsApp();
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-1.5 shadow-2xs">
+                  <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 pl-1 shrink-0 flex items-center gap-1">
+                    <MessageSquare className="size-3.5 text-emerald-600" /> WhatsApp:
+                  </span>
+                  <input
+                    ref={quickPhoneRef}
+                    type="tel"
+                    placeholder="10-digit mobile (Press F9)..."
+                    value={quickPhone}
+                    onChange={(e) => setQuickPhone(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && preview) {
+                        e.preventDefault();
+                        handleQuickWhatsApp();
+                      }
+                    }}
+                    className="h-8 flex-1 min-w-0 rounded-lg border border-border bg-card px-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none"
+                  />
+                  {/* WhatsApp Mode Switcher: Desktop App vs Single Web Tab */}
+                  <button
+                    type="button"
+                    onClick={toggleWaMode}
+                    className="h-8 px-2 rounded-lg border border-border bg-card text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1 shrink-0"
+                    title={
+                      waMode === "desktop"
+                        ? "Currently: Windows WhatsApp Desktop App (Direct protocol, zero browser tabs). Click to switch to Single Tab."
+                        : "Currently: WhatsApp Web (Single reused tab, zero duplicate tabs). Click to switch to Desktop App."
                     }
-                  }}
-                  className="h-8 flex-1 min-w-0 rounded-lg border border-border bg-card px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  disabled={!preview}
-                  onClick={handleQuickWhatsApp}
-                  className="h-8 shrink-0 flex items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-2xs"
-                  title="Save bill and send WhatsApp receipt"
-                >
-                  <Send className="size-3 shrink-0" />
-                  <span>Send</span>
-                </button>
+                  >
+                    {waMode === "desktop" ? "💻 Desktop" : "🌐 Single Tab"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!preview}
+                    onClick={handleQuickWhatsApp}
+                    className="h-8 shrink-0 flex items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-2xs"
+                    title="Save bill and dispatch WhatsApp receipt"
+                  >
+                    <Send className="size-3 shrink-0" />
+                    <span>Send</span>
+                  </button>
+                </div>
+                <div className="flex items-center justify-between px-1 text-[10px] text-muted-foreground">
+                  <span>
+                    {waMode === "desktop" ? "🚀 Directly opens Windows WhatsApp App" : "🔒 Reuses single WhatsApp Web tab (Zero duplicate tabs)"}
+                  </span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Auto-copies receipt text</span>
+                </div>
               </div>
             )}
 
